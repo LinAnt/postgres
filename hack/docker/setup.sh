@@ -14,7 +14,7 @@ source "$REPO_ROOT/hack/libbuild/common/lib.sh"
 source "$REPO_ROOT/hack/libbuild/common/public_image.sh"
 
 APPSCODE_ENV=${APPSCODE_ENV:-dev}
-IMG=k3pc
+IMG=k8spg
 
 DIST=$GOPATH/src/github.com/k8sdb/postgres/dist
 mkdir -p $DIST
@@ -24,35 +24,35 @@ fi
 
 clean() {
     pushd $GOPATH/src/github.com/k8sdb/postgres/hack/docker
-    rm k3pc Dockerfile
+    rm k8spg Dockerfile
     popd
 }
 
 build_binary() {
     pushd $GOPATH/src/github.com/k8sdb/postgres
     ./hack/builddeps.sh
-    ./hack/make.py build k3pc
+    ./hack/make.py build k8spg
     detect_tag $DIST/.tag
     popd
 }
 
 build_docker() {
     pushd $GOPATH/src/github.com/k8sdb/postgres/hack/docker
-    cp $DIST/k3pc/k3pc-linux-amd64 k3pc
-    chmod 755 k3pc
+    cp $DIST/k8spg/k8spg-linux-amd64 k8spg
+    chmod 755 k8spg
 
     cat >Dockerfile <<EOL
 FROM alpine
 
-COPY k3pc /k3pc
+COPY k8spg /k8spg
 
 USER nobody:nobody
-ENTRYPOINT ["/k3pc"]
+ENTRYPOINT ["/k8spg"]
 EOL
     local cmd="docker build -t appscode/$IMG:$TAG ."
     echo $cmd; $cmd
 
-    rm k3pc Dockerfile
+    rm k8spg Dockerfile
     popd
 }
 
