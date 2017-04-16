@@ -1,5 +1,5 @@
-hash: a91a5e4bedc247558df8ecb1edacb68bace644cfdd692ff3ba63415a112bdde8
-updated: 2017-04-16T10:16:32.46209687-07:00
+hash: 735c9cb54c8fdeb9f1f268368efc71912e81694d88601469629f49b3d808eb76
+updated: 2017-04-16T10:22:53.143922173-07:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -87,7 +87,7 @@ imports:
   - log
   - swagger
 - name: github.com/ghodss/yaml
-  version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
+  version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
 - name: github.com/go-ini/ini
   version: 2e44421e256d82ebbf3d4d4fcabe8930b905eff3
 - name: github.com/go-openapi/jsonpointer
@@ -98,6 +98,8 @@ imports:
   version: 6aced65f8501fe1217321abf0749d354824ba2ff
 - name: github.com/go-openapi/swag
   version: 1d0bd113de87027671077d3c71eb3ac5d7dbba72
+- name: github.com/go-yaml/yaml
+  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 - name: github.com/gogo/protobuf
   version: e18d7aa8f8c624c915db340349aad4c49b10d173
   subpackages:
