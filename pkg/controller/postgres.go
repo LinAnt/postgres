@@ -17,8 +17,9 @@ func (c *Controller) create(postgres *tapi.Postgres) {
 	unversionedNow := unversioned.Now()
 	postgres.Status.Created = &unversionedNow
 	postgres.Status.DatabaseStatus = tapi.StatusDatabaseCreating
+	var _postgres *tapi.Postgres
 	var err error
-	if postgres, err = c.ExtClient.Postgreses(postgres.Namespace).Update(postgres); err != nil {
+	if _postgres, err = c.ExtClient.Postgreses(postgres.Namespace).Update(postgres); err != nil {
 		message := fmt.Sprintf(`Fail to update Postgres: "%v". Reason: %v`, postgres.Name, err)
 		c.eventRecorder.PushEvent(
 			kapi.EventTypeWarning, eventer.EventReasonFailedToUpdate, message, postgres,
@@ -26,6 +27,7 @@ func (c *Controller) create(postgres *tapi.Postgres) {
 		log.Errorln(err)
 		return
 	}
+	postgres = _postgres
 
 	if err := c.validatePostgres(postgres); err != nil {
 		c.eventRecorder.PushEvent(kapi.EventTypeWarning, eventer.EventReasonInvalid, err.Error(), postgres)
@@ -157,13 +159,14 @@ func (c *Controller) create(postgres *tapi.Postgres) {
 	}
 
 	postgres.Status.DatabaseStatus = tapi.StatusDatabaseRunning
-	if _, err := c.ExtClient.Postgreses(postgres.Namespace).Update(postgres); err != nil {
+	if _postgres, err = c.ExtClient.Postgreses(postgres.Namespace).Update(postgres); err != nil {
 		message := fmt.Sprintf(`Fail to update Postgres: "%v". Reason: %v`, postgres.Name, err)
 		c.eventRecorder.PushEvent(
 			kapi.EventTypeWarning, eventer.EventReasonFailedToUpdate, message, postgres,
 		)
 		log.Errorln(err)
 	}
+	postgres = _postgres
 
 	// Setup Schedule backup
 	if postgres.Spec.BackupSchedule != nil {

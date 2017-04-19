@@ -317,6 +317,7 @@ func (w *Controller) createDeletedDatabase(postgres *tapi.Postgres) (*tapi.Delet
 			Namespace: postgres.Namespace,
 			Labels: map[string]string{
 				amc.LabelDatabaseType: tapi.ResourceNamePostgres,
+				amc.LabelDatabaseName: postgres.Name,
 			},
 		},
 	}
