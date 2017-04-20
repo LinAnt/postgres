@@ -10,8 +10,7 @@ BIN=$GOPATH/bin
 ROOT=$GOPATH
 REPO_ROOT=$GOPATH/src/github.com/k8sdb/postgres
 
-source "$REPO_ROOT/hack/libbuild/common/lib.sh"
-source "$REPO_ROOT/hack/libbuild/common/public_image.sh"
+source "$REPO_ROOT/hack/libbuild/common/k8sdb_image.sh"
 
 APPSCODE_ENV=${APPSCODE_ENV:-dev}
 IMG=k8s-pg
@@ -49,7 +48,7 @@ COPY k8s-pg /k8s-pg
 USER nobody:nobody
 ENTRYPOINT ["/k8s-pg"]
 EOL
-    local cmd="docker build -t appscode/$IMG:$TAG ."
+    local cmd="docker build -t k8sdb/$IMG:$TAG ."
     echo $cmd; $cmd
 
     rm k8s-pg Dockerfile
@@ -64,12 +63,13 @@ build() {
 docker_push() {
     if [ "$APPSCODE_ENV" = "prod" ]; then
         echo "Nothing to do in prod env. Are you trying to 'release' binaries to prod?"
-        exit 0
+        exit 1
     fi
-
-    if [[ "$(docker images -q appscode/$IMG:$TAG 2> /dev/null)" != "" ]]; then
-        docker_up $IMG:$TAG
+    if [ "$TAG_STRATEGY" = "git_tag" ]; then
+        echo "Are you trying to 'release' binaries to prod?"
+        exit 1
     fi
+    hub_canary
 }
 
 docker_release() {
@@ -81,10 +81,7 @@ docker_release() {
         echo "'apply_tag' to release binaries and/or docker images."
         exit 1
     fi
-
-    if [[ "$(docker images -q appscode/$IMG:$TAG 2> /dev/null)" != "" ]]; then
-        docker push appscode/$IMG:$TAG
-    fi
+    hub_up
 }
 
 source_repo $@
