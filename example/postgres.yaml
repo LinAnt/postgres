@@ -3,5 +3,5 @@ kind: Postgres
 metadata:
   name: postgres-demo
 spec:
-  Version: canary-db
+  Version: 9.5-db
   Replicas: 1
