@@ -2,18 +2,18 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
-    run: k8sdb-postgres
-  name: k8sdb-postgres
+    run: k8spg-operator
+  name: k8spg-operator
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      run: k8sdb-postgres
+      run: k8spg-operator
   template:
     metadata:
       labels:
-        run: k8sdb-postgres
+        run: k8spg-operator
     spec:
       containers:
       - name: k8sdb-pg
