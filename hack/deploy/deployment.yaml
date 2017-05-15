@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: k8sdb-pg
-        image: k8sdb/k8s-pg:canary
+        image: k8sdb/k8s-pg:0.1.0
         args:
         - run
-        - --postgres-util=canary-util
+        - --postgres-util=0.1.0-util
         - --v=4
