@@ -1,5 +1,5 @@
-hash: 735c9cb54c8fdeb9f1f268368efc71912e81694d88601469629f49b3d808eb76
-updated: 2017-05-16T19:35:44.130346554+06:00
+hash: ba0c695d9cfddac7672f39a01ecf11f9e58ba1080a5c8e227e7e6f97211c201e
+updated: 2017-05-16T14:50:58.546283428-07:00
 imports:
 - name: cloud.google.com/go
   version: fe3d41e1ecb2ce36ad3a979037c9b9a2b726226f
@@ -290,7 +290,7 @@ imports:
 - name: gopkg.in/yaml.v2
   version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 - name: k8s.io/kubernetes
-  version: f07eea23494be1e7c11a8e2cf51bd96d1ec9fdf1
+  version: 8eb75a5810cba92ccad845ca360cf924f2385881
   subpackages:
   - pkg/api
   - pkg/api/errors
