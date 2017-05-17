@@ -35,8 +35,9 @@ func (c *Controller) create(postgres *tapi.Postgres) error {
 	if err := c.validatePostgres(postgres); err != nil {
 		c.eventRecorder.Event(postgres, kapi.EventTypeWarning, eventer.EventReasonInvalid, err.Error())
 
-		if postgres, err = c.ExtClient.Postgreses(postgres.Namespace).Get(postgres.Name); err != nil {
-			return err
+		var _err error
+		if postgres, _err = c.ExtClient.Postgreses(postgres.Namespace).Get(postgres.Name); _err != nil {
+			return _err
 		}
 
 		postgres.Status.Phase = tapi.DatabasePhaseFailed
