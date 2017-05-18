@@ -87,7 +87,7 @@ func (c *Controller) create(postgres *tapi.Postgres) error {
 		var message string
 
 		if deletedDb.Labels[amc.LabelDatabaseKind] != tapi.ResourceKindPostgres {
-			message = fmt.Sprintf(`Invalid Postgres: "%v". Exists irrelevant DeletedDatabase: "%v"`,
+			message = fmt.Sprintf(`Invalid Postgres: "%v". Exists DeletedDatabase "%v" of different Kind`,
 				postgres.Name, deletedDb.Name)
 		} else {
 			if deletedDb.Status.Phase == tapi.DeletedDatabasePhaseRecovering {
@@ -331,7 +331,7 @@ func (c *Controller) delete(postgres *tapi.Postgres) error {
 				kapi.EventTypeWarning,
 				eventer.EventReasonFailedToCreate,
 				`Failed to recreate Postgres: "%v". Reason: %v`,
-				postgres,
+				postgres.Name,
 				err,
 			)
 			return err
