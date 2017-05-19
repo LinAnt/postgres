@@ -68,16 +68,16 @@ func (c *Controller) create(postgres *tapi.Postgres) error {
 		"Successfully validate Postgres",
 	)
 
-	// Check if DeletedDatabase exists or not
-	recovering := false
-	deletedDb, err := c.ExtClient.DeletedDatabases(postgres.Namespace).Get(postgres.Name)
+	// Check if DormantDatabase exists or not
+	resuming := false
+	dormantDb, err := c.ExtClient.DormantDatabases(postgres.Namespace).Get(postgres.Name)
 	if err != nil {
 		if !k8serr.IsNotFound(err) {
 			c.eventRecorder.Eventf(
 				postgres,
 				kapi.EventTypeWarning,
 				eventer.EventReasonFailedToGet,
-				`Fail to get DeletedDatabase: "%v". Reason: %v`,
+				`Fail to get DormantDatabase: "%v". Reason: %v`,
 				postgres.Name,
 				err,
 			)
@@ -86,17 +86,17 @@ func (c *Controller) create(postgres *tapi.Postgres) error {
 	} else {
 		var message string
 
-		if deletedDb.Labels[amc.LabelDatabaseKind] != tapi.ResourceKindPostgres {
-			message = fmt.Sprintf(`Invalid Postgres: "%v". Exists DeletedDatabase "%v" of different Kind`,
-				postgres.Name, deletedDb.Name)
+		if dormantDb.Labels[amc.LabelDatabaseKind] != tapi.ResourceKindPostgres {
+			message = fmt.Sprintf(`Invalid Postgres: "%v". Exists DormantDatabase "%v" of different Kind`,
+				postgres.Name, dormantDb.Name)
 		} else {
-			if deletedDb.Status.Phase == tapi.DeletedDatabasePhaseRecovering {
-				recovering = true
+			if dormantDb.Status.Phase == tapi.DormantDatabasePhaseResuming {
+				resuming = true
 			} else {
-				message = fmt.Sprintf(`Recover from DeletedDatabase: "%v"`, deletedDb.Name)
+				message = fmt.Sprintf(`Resume from DormantDatabase: "%v"`, dormantDb.Name)
 			}
 		}
-		if !recovering {
+		if !resuming {
 			if postgres, err = c.ExtClient.Postgreses(postgres.Namespace).Get(postgres.Name); err != nil {
 				return err
 			}
@@ -127,7 +127,7 @@ func (c *Controller) create(postgres *tapi.Postgres) error {
 			postgres,
 			kapi.EventTypeWarning,
 			eventer.EventReasonFailedToCreate,
-			`Failed to create ServiceAccount: "%v". Reason: %v`,
+			`Failed to create Service: "%v". Reason: %v`,
 			governingService,
 			err,
 		)
@@ -207,15 +207,15 @@ func (c *Controller) create(postgres *tapi.Postgres) error {
 		}
 	}
 
-	if recovering {
-		// Delete DeletedDatabase instance
-		if err := c.ExtClient.DeletedDatabases(deletedDb.Namespace).Delete(deletedDb.Name); err != nil {
+	if resuming {
+		// Delete DormantDatabase instance
+		if err := c.ExtClient.DormantDatabases(dormantDb.Namespace).Delete(dormantDb.Name); err != nil {
 			c.eventRecorder.Eventf(
 				postgres,
 				kapi.EventTypeWarning,
 				eventer.EventReasonFailedToDelete,
-				`Failed to delete DeletedDatabase: "%v". Reason: %v`,
-				deletedDb.Name,
+				`Failed to delete DormantDatabase: "%v". Reason: %v`,
+				dormantDb.Name,
 				err,
 			)
 			log.Errorln(err)
@@ -223,9 +223,9 @@ func (c *Controller) create(postgres *tapi.Postgres) error {
 		c.eventRecorder.Eventf(
 			postgres,
 			kapi.EventTypeNormal,
-			eventer.EventReasonSuccessfulDelete,
-			`Successfully deleted DeletedDatabase: "%v"`,
-			deletedDb.Name,
+			eventer.EventReasonSuccessfulResume,
+			`Successfully resumed Database: "%v"`,
+			dormantDb.Name,
 		)
 	}
 
@@ -313,10 +313,9 @@ func (c *Controller) initialize(postgres *tapi.Postgres) error {
 }
 
 func (c *Controller) delete(postgres *tapi.Postgres) error {
+	c.eventRecorder.Event(postgres, kapi.EventTypeNormal, eventer.EventReasonPausing, "Pausing Postgres")
 
-	c.eventRecorder.Event(postgres, kapi.EventTypeNormal, eventer.EventReasonDeleting, "Deleting Postgres")
-
-	if postgres.Spec.DoNotDelete {
+	if postgres.Spec.DoNotPause {
 		c.eventRecorder.Eventf(
 			postgres,
 			kapi.EventTypeWarning,
@@ -339,12 +338,12 @@ func (c *Controller) delete(postgres *tapi.Postgres) error {
 		return nil
 	}
 
-	if _, err := c.createDeletedDatabase(postgres); err != nil {
+	if _, err := c.createDormantDatabase(postgres); err != nil {
 		c.eventRecorder.Eventf(
 			postgres,
 			kapi.EventTypeWarning,
 			eventer.EventReasonFailedToCreate,
-			`Failed to create DeletedDatabase: "%v". Reason: %v`,
+			`Failed to create DormantDatabase: "%v". Reason: %v`,
 			postgres.Name,
 			err,
 		)
@@ -354,7 +353,7 @@ func (c *Controller) delete(postgres *tapi.Postgres) error {
 		postgres,
 		kapi.EventTypeNormal,
 		eventer.EventReasonSuccessfulCreate,
-		`Successfully created DeletedDatabase: "%v"`,
+		`Successfully created DormantDatabase: "%v"`,
 		postgres.Name,
 	)
 
