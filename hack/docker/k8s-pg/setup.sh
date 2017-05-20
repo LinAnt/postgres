@@ -44,10 +44,9 @@ build_docker() {
 FROM alpine
 
 RUN set -x \
-    && apk --update upgrade \
-    && apk add ca-certificates \
-    && update-ca-certificates \
-    && rm -rf /var/cache/apk/*
+  && apk update \
+  && apk add ca-certificates \
+  && rm -rf /var/cache/apk/*
 
 COPY k8s-pg /k8s-pg
 
