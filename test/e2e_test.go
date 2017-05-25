@@ -240,9 +240,30 @@ func TestSnapshot(t *testing.T) {
 	if !assert.True(t, done) {
 		fmt.Println("---- >> Failed to be deleted")
 	}
+
+	fmt.Println("---- >> WipingOut Database")
+	err = mini.WipeOutDormantDatabase(controller, postgres)
+	assert.Nil(t, err)
+	if !assert.True(t, done) {
+		fmt.Println("---- >> Failed to be wipedout")
+	}
+
+	fmt.Println("---- >> Checking DormantDatabase")
+	done, err = mini.CheckDormantDatabasePhase(controller, postgres, tapi.DormantDatabasePhaseWipedOut)
+	assert.Nil(t, err)
+	if !assert.True(t, done) {
+		fmt.Println("---- >> Failed to be wipedout")
+	}
+
+	fmt.Println("---- >> Deleting DormantDatabase")
+	err = mini.DeleteDormantDatabase(controller, postgres)
+	assert.Nil(t, err)
+	if !assert.True(t, done) {
+		fmt.Println("---- >> Failed to be deleted")
+	}
 }
 
-func TestDatabaseResumey(t *testing.T) {
+func TestDatabaseResume(t *testing.T) {
 	controller, err := getController()
 	if !assert.Nil(t, err) {
 		return
@@ -312,6 +333,12 @@ func TestDatabaseResumey(t *testing.T) {
 		}
 	}
 
+	_, err = controller.ExtClient.DormantDatabases(dormantDb.Namespace).Get(dormantDb.Name)
+	if !assert.NotNil(t, err) {
+		fmt.Println("---- >> Failed to delete DormantDatabase")
+		return
+	}
+
 	fmt.Println("---- >> Deleting Postgres")
 	err = mini.DeletePostgres(controller, postgres)
 	assert.Nil(t, err)
@@ -321,6 +348,27 @@ func TestDatabaseResumey(t *testing.T) {
 	assert.Nil(t, err)
 	if !assert.True(t, done) {
 		fmt.Println("---- >> Failed to be delete")
+	}
+
+	fmt.Println("---- >> WipingOut Database")
+	err = mini.WipeOutDormantDatabase(controller, postgres)
+	assert.Nil(t, err)
+	if !assert.True(t, done) {
+		fmt.Println("---- >> Failed to be wipedout")
+	}
+
+	fmt.Println("---- >> Checking DormantDatabase")
+	done, err = mini.CheckDormantDatabasePhase(controller, postgres, tapi.DormantDatabasePhaseWipedOut)
+	assert.Nil(t, err)
+	if !assert.True(t, done) {
+		fmt.Println("---- >> Failed to be wipedout")
+	}
+
+	fmt.Println("---- >> Deleting DormantDatabase")
+	err = mini.DeleteDormantDatabase(controller, postgres)
+	assert.Nil(t, err)
+	if !assert.True(t, done) {
+		fmt.Println("---- >> Failed to be deleted")
 	}
 }
 
@@ -453,12 +501,56 @@ func TestInitialize(t *testing.T) {
 		fmt.Println("---- >> Failed to be deleted")
 	}
 
+
+	fmt.Println("---- >> WipingOut Database")
+	err = mini.WipeOutDormantDatabase(controller, postgres)
+	assert.Nil(t, err)
+	if !assert.True(t, done) {
+		fmt.Println("---- >> Failed to be wipedout")
+	}
+
+	fmt.Println("---- >> Checking DormantDatabase")
+	done, err = mini.CheckDormantDatabasePhase(controller, postgres, tapi.DormantDatabasePhaseWipedOut)
+	assert.Nil(t, err)
+	if !assert.True(t, done) {
+		fmt.Println("---- >> Failed to be wipedout")
+	}
+
+	fmt.Println("---- >> Deleting DormantDatabase")
+	err = mini.DeleteDormantDatabase(controller, postgres)
+	assert.Nil(t, err)
+	if !assert.True(t, done) {
+		fmt.Println("---- >> Failed to be deleted")
+	}
+
 	fmt.Println("---- >> Deleted postgres_init")
 	err = mini.DeletePostgres(controller, postgres_init)
 	assert.Nil(t, err)
 
 	fmt.Println("---- >> Checking DormantDatabase")
 	done, err = mini.CheckDormantDatabasePhase(controller, postgres_init, tapi.DormantDatabasePhasePaused)
+	assert.Nil(t, err)
+	if !assert.True(t, done) {
+		fmt.Println("---- >> Failed to be deleted")
+	}
+
+
+	fmt.Println("---- >> WipingOut Database")
+	err = mini.WipeOutDormantDatabase(controller, postgres_init)
+	assert.Nil(t, err)
+	if !assert.True(t, done) {
+		fmt.Println("---- >> Failed to be wipedout")
+	}
+
+	fmt.Println("---- >> Checking DormantDatabase")
+	done, err = mini.CheckDormantDatabasePhase(controller, postgres_init, tapi.DormantDatabasePhaseWipedOut)
+	assert.Nil(t, err)
+	if !assert.True(t, done) {
+		fmt.Println("---- >> Failed to be wipedout")
+	}
+
+	fmt.Println("---- >> Deleting DormantDatabase")
+	err = mini.DeleteDormantDatabase(controller, postgres_init)
 	assert.Nil(t, err)
 	if !assert.True(t, done) {
 		fmt.Println("---- >> Failed to be deleted")
