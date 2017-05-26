@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
 
 	"github.com/appscode/log"
 	pcm "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
@@ -10,24 +13,25 @@ import (
 	"github.com/k8sdb/postgres/pkg/controller"
 	"github.com/spf13/cobra"
 	cgcmd "k8s.io/client-go/tools/clientcmd"
+	kapi "k8s.io/kubernetes/pkg/api"
 	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
 	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
 	"k8s.io/kubernetes/pkg/util/runtime"
 )
 
-const (
-	// Default tag
-	canary = "canary-util"
-)
-
 func NewCmdRun() *cobra.Command {
 	var (
-		masterURL        string
-		kubeconfigPath   string
-		postgresUtilTag  string
-		governingService string
-		address          string
+		masterURL      string
+		kubeconfigPath string
 	)
+
+	opt := controller.Options{
+		PostgresUtilTag:   "canary-util",
+		ExporterNamespace: namespace(),
+		ExporterTag:       "canary",
+		GoverningService:  "kubedb",
+		Address:           ":8080",
+	}
 
 	cmd := &cobra.Command{
 		Use:   "run",
@@ -39,8 +43,13 @@ func NewCmdRun() *cobra.Command {
 			}
 
 			// Check postgres docker image tag
-			if err := docker.CheckDockerImageVersion(controller.ImagePostgres, postgresUtilTag); err != nil {
-				log.Fatalf(`Image %v:%v not found.`, controller.ImagePostgres, postgresUtilTag)
+			if err := docker.CheckDockerImageVersion(docker.ImagePostgres, opt.PostgresUtilTag); err != nil {
+				log.Fatalf(`Image %v:%v not found.`, docker.ImagePostgres, opt.PostgresUtilTag)
+			}
+
+			// Check exporter docker image tag
+			if err := docker.CheckDockerImageVersion(docker.ImageExporter, opt.ExporterTag); err != nil {
+				log.Fatalf(`Image %v:%v not found.`, docker.ImageExporter, opt.ExporterTag)
 			}
 
 			client := clientset.NewForConfigOrDie(config)
@@ -56,18 +65,36 @@ func NewCmdRun() *cobra.Command {
 				log.Fatalln(err)
 			}
 
-			w := controller.New(client, extClient, promClient, postgresUtilTag, governingService, address)
+			w := controller.New(client, extClient, promClient, opt)
 			defer runtime.HandleCrash()
 			fmt.Println("Starting operator...")
 			go w.RunAndHold()
 
 		},
 	}
-	cmd.Flags().StringVar(&masterURL, "master", "", "The address of the Kubernetes API server (overrides any value in kubeconfig)")
-	cmd.Flags().StringVar(&kubeconfigPath, "kubeconfig", "", "Path to kubeconfig file with authorization information (the master location is set by the master flag).")
-	cmd.Flags().StringVar(&postgresUtilTag, "postgres-util", canary, "Tag of postgres util")
-	cmd.Flags().StringVar(&governingService, "governing-service", "kubedb", "Governing service for database statefulset")
-	cmd.Flags().StringVar(&address, "address", ":8080", "Address to listen on for web interface and telemetry.")
+	// operator flags
+	cmd.Flags().StringVar(&masterURL, "master", masterURL, "The address of the Kubernetes API server (overrides any value in kubeconfig)")
+	cmd.Flags().StringVar(&kubeconfigPath, "kubeconfig", kubeconfigPath, "Path to kubeconfig file with authorization information (the master location is set by the master flag).")
+	cmd.Flags().StringVar(&opt.GoverningService, "governing-service", opt.GoverningService, "Governing service for database statefulset")
+	cmd.Flags().StringVar(&opt.Address, "address", opt.Address, "Address to listen on for web interface and telemetry.")
 
+	// postgres flags
+	cmd.Flags().StringVar(&opt.PostgresUtilTag, "postgres.util-tag", opt.PostgresUtilTag, "Tag of postgres util")
+
+	// exporter flags
+	cmd.Flags().StringVar(&opt.ExporterNamespace, "exporter.namespace", opt.ExporterNamespace, "Namespace for monitoring exporter")
+	cmd.Flags().StringVar(&opt.ExporterTag, "exporter.tag", opt.ExporterTag, "Tag of monitoring exporter")
 	return cmd
+}
+
+func namespace() string {
+	if ns := os.Getenv("OPERATOR_NAMESPACE"); ns != "" {
+		return ns
+	}
+	if data, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace"); err == nil {
+		if ns := strings.TrimSpace(string(data)); len(ns) > 0 {
+			return ns
+		}
+	}
+	return kapi.NamespaceDefault
 }

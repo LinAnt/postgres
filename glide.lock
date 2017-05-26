@@ -1,5 +1,5 @@
-hash: eb4db69c252febca5f84e57b7c9394dd92a06343c925ec1a72dbd992e4cecd63
-updated: 2017-05-26T01:06:12.728442329-07:00
+hash: 2034756bb3b65623ef2b38bb42899d780dc4625832411805d3d47b17903acce9
+updated: 2017-05-26T06:10:19.287814161-07:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
@@ -81,8 +81,15 @@ imports:
 - name: github.com/docker/distribution
   version: cd27f179f2c10c5d300e6d09025b538c475b0d51
   subpackages:
+  - context
   - digest
+  - manifest
+  - manifest/schema1
+  - manifest/schema2
   - reference
+  - uuid
+- name: github.com/docker/libtrust
+  version: aabc10ec26b754e797f9028f4589c5b7bd90dc20
 - name: github.com/emicklei/go-restful
   version: 89ef8af493ab468a45a42bb0d89a06fccdd2fb22
   subpackages:
@@ -119,6 +126,10 @@ imports:
   - proto
 - name: github.com/google/gofuzz
   version: bbcb9da2d746f8bdbd6a936686a0a6067ada0ec5
+- name: github.com/gorilla/context
+  version: 215affda49addc4c8ef7e2534915df2c8c35c6cd
+- name: github.com/gorilla/mux
+  version: 8096f47503459bcc74d1f4c487b7e6e42e5746b5
 - name: github.com/graymeta/stow
   version: 0f16e170afc5e1b89434469a3b52a81f792c9038
   subpackages:
@@ -126,6 +137,8 @@ imports:
   - s3
 - name: github.com/heroku/docker-registry-client
   version: 95467b6cacee2a06f112a3cf7e47a70fad6000cf
+  subpackages:
+  - registry
 - name: github.com/howeyc/gopass
   version: 3ca23474a7c7203e0a0a070fd33508f6efdb9b3d
 - name: github.com/imdario/mergo
@@ -145,7 +158,9 @@ imports:
   - api/install
   - client/clientset
   - pkg/controller
+  - pkg/docker
   - pkg/eventer
+  - pkg/monitor
 - name: github.com/lib/pq
   version: 50761b0867bd1d9d069276790bcd4a3bccf2324a
 - name: github.com/mailru/easyjson
@@ -271,7 +286,7 @@ imports:
 - name: gopkg.in/robfig/cron.v2
   version: be2e0b0deed5a68ffee390b4583a13aff8321535
 - name: gopkg.in/yaml.v2
-  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
+  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 - name: k8s.io/client-go
   version: e121606b0d09b2e1c467183ee46217fa85a6b672
   subpackages:
