@@ -24,31 +24,31 @@ func (c *Controller) newMonitorController(postgres *tapi.Postgres) (monitor.Moni
 }
 
 func (c *Controller) addMonitor(postgres *tapi.Postgres) error {
-	monitor, err := c.newMonitorController(postgres)
+	ctrl, err := c.newMonitorController(postgres)
 	if err != nil {
 		return err
 	}
-	return monitor.AddMonitor(postgres.ObjectMeta, postgres.Spec.Monitor)
+	return ctrl.AddMonitor(postgres.ObjectMeta, postgres.Spec.Monitor)
 }
 
 func (c *Controller) deleteMonitor(postgres *tapi.Postgres) error {
-	m, err := c.newMonitorController(postgres)
+	ctrl, err := c.newMonitorController(postgres)
 	if err != nil {
 		return err
 	}
-	return m.DeleteMonitor(postgres.ObjectMeta, postgres.Spec.Monitor)
+	return ctrl.DeleteMonitor(postgres.ObjectMeta, postgres.Spec.Monitor)
 }
 
 func (c *Controller) updateMonitor(oldPostgres, updatedPostgres *tapi.Postgres) error {
 	var err error
-	var monitor monitor.Monitor
+	var ctrl monitor.Monitor
 	if updatedPostgres.Spec.Monitor == nil {
-		monitor, err = c.newMonitorController(oldPostgres)
+		ctrl, err = c.newMonitorController(oldPostgres)
 	} else {
-		monitor, err = c.newMonitorController(updatedPostgres)
+		ctrl, err = c.newMonitorController(updatedPostgres)
 	}
 	if err != nil {
 		return err
 	}
-	return monitor.UpdateMonitor(updatedPostgres.ObjectMeta, oldPostgres.Spec.Monitor, updatedPostgres.Spec.Monitor)
+	return ctrl.UpdateMonitor(updatedPostgres.ObjectMeta, oldPostgres.Spec.Monitor, updatedPostgres.Spec.Monitor)
 }
