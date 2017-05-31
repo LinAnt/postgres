@@ -1,5 +1,5 @@
-hash: a4f00e0cc0c33e537e03b7c8425cb4b718081f5294d6c8e4ca9eba75c3fa294a
-updated: 2017-05-31T13:57:45.423842195+06:00
+hash: 4254f7de75badc4148b550d3a1cd3689892517191889cd48f609d2331466a648
+updated: 2017-05-31T03:58:34.223904387-07:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
@@ -214,7 +214,7 @@ imports:
 - name: github.com/Sirupsen/logrus
   version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
 - name: github.com/spf13/cobra
-  version: 8d4ce3549a0bf0e3569df3aae7423b7743cd05a9
+  version: e606913c4ee45fec232e67e70105fb6c866b95d9
 - name: github.com/spf13/pflag
   version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
 - name: github.com/ugorji/go
@@ -358,7 +358,7 @@ imports:
   - util/homedir
   - util/integer
 - name: k8s.io/kubernetes
-  version: f07eea23494be1e7c11a8e2cf51bd96d1ec9fdf1
+  version: 8eb75a5810cba92ccad845ca360cf924f2385881
   subpackages:
   - pkg/api
   - pkg/api/errors
