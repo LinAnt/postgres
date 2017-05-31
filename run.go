@@ -30,6 +30,7 @@ func NewCmdRun() *cobra.Command {
 		ExporterTag:       "canary",
 		GoverningService:  "kubedb",
 		Address:           ":8080",
+		EnableAnalytics:   true,
 	}
 
 	cmd := &cobra.Command{
@@ -62,8 +63,7 @@ func NewCmdRun() *cobra.Command {
 			w := controller.New(client, extClient, promClient, opt)
 			defer runtime.HandleCrash()
 			fmt.Println("Starting operator...")
-			go w.RunAndHold()
-
+			w.RunAndHold()
 		},
 	}
 	// operator flags
@@ -75,6 +75,10 @@ func NewCmdRun() *cobra.Command {
 	// exporter flags
 	cmd.Flags().StringVar(&opt.ExporterNamespace, "exporter.namespace", opt.ExporterNamespace, "Namespace for monitoring exporter")
 	cmd.Flags().StringVar(&opt.ExporterTag, "exporter.tag", opt.ExporterTag, "Tag of monitoring exporter")
+
+	// Analytics flags
+	cmd.Flags().BoolVar(&opt.EnableAnalytics, "analytics", opt.EnableAnalytics, "Send analytical event to Google Analytics")
+
 	return cmd
 }
 
