@@ -3,7 +3,6 @@ package controller
 import (
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/appscode/log"
@@ -36,8 +35,6 @@ type cronController struct {
 	cronEntryIDs cmap.ConcurrentMap
 	// Event Recorder
 	eventRecorder record.EventRecorder
-	// To perform start operation once
-	once sync.Once
 }
 
 /*
@@ -54,9 +51,7 @@ func NewCronController(client clientset.Interface, extClient tcs.ExtensionInterf
 }
 
 func (c *cronController) StartCron() {
-	c.once.Do(func() {
-		c.cron.Start()
-	})
+	c.cron.Start()
 }
 
 func (c *cronController) ScheduleBackup(

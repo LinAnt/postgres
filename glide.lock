@@ -1,5 +1,5 @@
-hash: a4f00e0cc0c33e537e03b7c8425cb4b718081f5294d6c8e4ca9eba75c3fa294a
-updated: 2017-06-13T11:48:28.343557014+06:00
+hash: 87fb843fc5b9eeeff7d559ddbaa94f00327238c02722041bf38b609704e5205e
+updated: 2017-06-13T13:53:53.190792758-07:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
@@ -51,6 +51,9 @@ imports:
   - private/waiter
   - service/s3
   - service/sts
+- name: github.com/Azure/azure-sdk-for-go
+  version: 0984e0641ae43b89283223034574d6465be93bf4
+  vcs: git
 - name: github.com/beorn7/perks
   version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
   subpackages:
@@ -134,7 +137,9 @@ imports:
 - name: github.com/gorilla/mux
   version: 8096f47503459bcc74d1f4c487b7e6e42e5746b5
 - name: github.com/graymeta/stow
-  version: d5dd9e1c978bc9a265e29b281589ebdc50276ed7
+  version: d4b253dd4995360ae103b6460bbadeaa7fb3cdb4
+  repo: https://github.com/appscode/stow.git
+  vcs: git
   subpackages:
   - google
   - s3
@@ -157,7 +162,7 @@ imports:
 - name: github.com/juju/ratelimit
   version: 77ed1c8a01217656d2080ad51981f6e99adaa177
 - name: github.com/k8sdb/apimachinery
-  version: aea7f4da55c4e8982331952809a54e01bdca43e6
+  version: 401cafad3f98c6ef2cbd44785d3bcdde7eedc061
   subpackages:
   - api
   - api/install
@@ -260,12 +265,8 @@ imports:
   - unicode/norm
   - width
 - name: google.golang.org/api
-  version: a69f0f19d246419bb931b0ac8f4f8d3f3e6d4feb
+  version: 324744a33f1f37e63dd1695cfb3ec9a3e4a1cb05
   subpackages:
-  - cloudmonitoring/v2beta2
-  - compute/v1
-  - container/v1
-  - dns/v1
   - gensupport
   - googleapi
   - googleapi/internal/uritemplates
@@ -359,7 +360,7 @@ imports:
   - util/homedir
   - util/integer
 - name: k8s.io/kubernetes
-  version: f07eea23494be1e7c11a8e2cf51bd96d1ec9fdf1
+  version: 8eb75a5810cba92ccad845ca360cf924f2385881
   subpackages:
   - pkg/api
   - pkg/api/errors
