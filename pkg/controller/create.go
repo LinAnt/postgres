@@ -66,10 +66,9 @@ func (c *Controller) createService(postgres *tapi.Postgres) error {
 		postgres.Spec.Monitor.Agent == tapi.AgentCoreosPrometheus &&
 		postgres.Spec.Monitor.Prometheus != nil {
 		svc.Spec.Ports = append(svc.Spec.Ports, apiv1.ServicePort{
-
 			Name:       tapi.PrometheusExporterPortName,
 			Port:       tapi.PrometheusExporterPortNumber,
-			TargetPort: intstr.FromInt(tapi.PrometheusExporterPortNumber),
+			TargetPort: intstr.FromString(tapi.PrometheusExporterPortName),
 		})
 	}
 
