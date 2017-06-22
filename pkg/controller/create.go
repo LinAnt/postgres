@@ -167,7 +167,7 @@ func (c *Controller) createStatefulSet(postgres *tapi.Postgres) (*apps.StatefulS
 		exporter := apiv1.Container{
 			Name: "exporter",
 			Args: []string{
-				"exporter",
+				"export",
 				fmt.Sprintf("--address=:%d", postgres.Spec.Monitor.Prometheus.TargetPort.IntValue()),
 				"--v=3",
 			},
