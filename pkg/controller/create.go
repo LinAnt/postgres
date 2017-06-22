@@ -177,7 +177,7 @@ func (c *Controller) createStatefulSet(postgres *tapi.Postgres) (*apps.StatefulS
 				{
 					Name:          "http",
 					Protocol:      apiv1.ProtocolTCP,
-					ContainerPort: postgres.Spec.Monitor.Prometheus.TargetPort.IntValue(),
+					ContainerPort: int32(postgres.Spec.Monitor.Prometheus.TargetPort.IntValue()),
 				},
 			},
 		}
