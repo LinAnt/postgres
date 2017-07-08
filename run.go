@@ -28,7 +28,7 @@ func NewCmdRun() *cobra.Command {
 
 	opt := controller.Options{
 		OperatorNamespace: namespace(),
-		ExporterTag:       "0.2.0",
+		ExporterTag:       "0.3.0",
 		GoverningService:  "kubedb",
 		Address:           ":8080",
 		EnableAnalytics:   true,
