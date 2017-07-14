@@ -15,10 +15,10 @@ import:
   version: v0.6.2
 - package: github.com/graymeta/stow
   repo: https://github.com/appscode/stow.git
-  version: master
   vcs: git
-- package: github.com/k8sdb/apimachinery
   version: master
+- package: github.com/k8sdb/apimachinery
+  version: release-0.3
 - package: github.com/prometheus/client_golang
   version: v0.8.0
 - package: github.com/prometheus/common
