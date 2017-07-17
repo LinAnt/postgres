@@ -37,7 +37,7 @@ build_binary() {
 
 build_docker() {
     pushd $REPO_ROOT/hack/docker/pg-operator
-    cp $DIST/pg-operator/pg-operator-linux-amd64 pg-operator
+    cp $DIST/pg-operator/pg-operator-alpine-amd64 pg-operator
     chmod 755 pg-operator
 
     cat >Dockerfile <<EOL
