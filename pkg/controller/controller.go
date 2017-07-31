@@ -255,24 +255,14 @@ func (c *Controller) pushFailureEvent(postgres *tapi.Postgres, reason string) {
 		reason,
 	)
 
-	var err error
-	if postgres, err = c.ExtClient.Postgreses(postgres.Namespace).Get(postgres.Name); err != nil {
-		log.Errorln(err)
-		return
-	}
+	_, err := c.UpdatePostgres(postgres.ObjectMeta, func(in tapi.Postgres) tapi.Postgres {
+		in.Status.Phase = tapi.DatabasePhaseFailed
+		in.Status.Reason = reason
+		return in
+	})
 
-	postgres.Status.Phase = tapi.DatabasePhaseFailed
-	postgres.Status.Reason = reason
-	if _, err := c.ExtClient.Postgreses(postgres.Namespace).Update(postgres); err != nil {
-		c.eventRecorder.Eventf(
-			postgres,
-			apiv1.EventTypeWarning,
-			eventer.EventReasonFailedToUpdate,
-			`Fail to update Postgres: "%v". Reason: %v`,
-			postgres.Name,
-			err,
-		)
-		log.Errorln(err)
+	if err != nil {
+		c.eventRecorder.Eventf(postgres, apiv1.EventTypeWarning, eventer.EventReasonFailedToUpdate, err.Error())
 	}
 }
 
