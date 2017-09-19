@@ -1,4 +1,4 @@
-package main
+package cmds
 
 import (
 	"fmt"
@@ -6,13 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/appscode/log"
+	"github.com/appscode/go/log"
 	pcm "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	tapi "github.com/k8sdb/apimachinery/apis/kubedb/v1alpha1"
 	tcs "github.com/k8sdb/apimachinery/client/typed/kubedb/v1alpha1"
-	"github.com/k8sdb/apimachinery/pkg/analytics"
 	amc "github.com/k8sdb/apimachinery/pkg/controller"
-	"github.com/k8sdb/apimachinery/pkg/docker"
 	"github.com/k8sdb/apimachinery/pkg/migrator"
 	"github.com/k8sdb/postgres/pkg/controller"
 	"github.com/spf13/cobra"
@@ -34,13 +32,13 @@ func NewCmdRun() *cobra.Command {
 		ExporterTag:       "0.6.0",
 		GoverningService:  "kubedb",
 		Address:           ":8080",
-		EnableAnalytics:   true,
 		EnableRbac:        false,
 	}
 
 	cmd := &cobra.Command{
-		Use:   "run",
-		Short: "Run Postgres in Kubernetes",
+		Use:               "run",
+		Short:             "Run Postgres in Kubernetes",
+		DisableAutoGenTag: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			config, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfigPath)
 			if err != nil {
@@ -75,7 +73,6 @@ func NewCmdRun() *cobra.Command {
 			}
 
 			fmt.Println("Starting operator...")
-			analytics.SendEvent(docker.ImagePostgresOperator, "started", Version)
 			w.RunAndHold()
 		},
 	}
@@ -86,8 +83,6 @@ func NewCmdRun() *cobra.Command {
 	cmd.Flags().StringVar(&opt.ExporterTag, "exporter-tag", opt.ExporterTag, "Tag of kubedb/operator used as exporter")
 	cmd.Flags().StringVar(&opt.Address, "address", opt.Address, "Address to listen on for web interface and telemetry.")
 	cmd.Flags().BoolVar(&opt.EnableRbac, "rbac", opt.EnableRbac, "Enable RBAC for database workloads")
-	// Analytics flags
-	cmd.Flags().BoolVar(&opt.EnableAnalytics, "analytics", opt.EnableAnalytics, "Send analytical event to Google Analytics")
 
 	return cmd
 }
