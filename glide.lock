@@ -1,5 +1,5 @@
 hash: 49462aab1041f160552f0861047d7664e27f10e909eb05d643142abc7da4d77f
-updated: 2017-09-19T14:36:36.17928752-07:00
+updated: 2017-09-21T20:12:58.900741455-07:00
 imports:
 - name: cloud.google.com/go
   version: fe3d41e1ecb2ce36ad3a979037c9b9a2b726226f
@@ -7,7 +7,7 @@ imports:
   - compute/metadata
   - internal
 - name: github.com/appscode/go
-  version: d1fbd14e5c6e78557c12f6d2c9c282b3c0d0c612
+  version: 40c185ab12c60de0218e5e5c319a032498c21695
   subpackages:
   - context
   - crypto/rand
@@ -20,7 +20,7 @@ imports:
   - version
   - wait
 - name: github.com/appscode/kutil
-  version: 1f75c33d081d0e7e1073ed9e8a5774e5c8c93e86
+  version: 6788b3a7e56c2f71e4c41f44835b8f1fafca8c16
   subpackages:
   - apps/v1beta1
   - core/v1
@@ -86,7 +86,7 @@ imports:
   subpackages:
   - pkg/client/monitoring/v1alpha1
 - name: github.com/cpuguy83/go-md2man
-  version: 71acacd42f85e5e82f70a55327789582a5200a90
+  version: 1d903dcb749992f3741d744c0f8376b4bd7eb3e1
   subpackages:
   - md2man
 - name: github.com/davecgh/go-spew
@@ -113,6 +113,8 @@ imports:
   - log
 - name: github.com/emicklei/go-restful-swagger12
   version: dcef7f55730566d41eae5db10e7d6981829720f6
+- name: github.com/evanphx/json-patch
+  version: ba18e35c5c1b36ef6334cad706eb681153d2d379
 - name: github.com/ghodss/yaml
   version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
 - name: github.com/go-ini/ini
@@ -191,7 +193,7 @@ imports:
 - name: github.com/juju/ratelimit
   version: 5b9ff866471762aa2ab2dced63c9fb6f53921342
 - name: github.com/k8sdb/apimachinery
-  version: 0ce956bc35245de2d2ac64a4abd861eeffb9a93f
+  version: e3ac059d5f8df680ec7ef8692d790d2bed2fde63
   subpackages:
   - apis/kubedb
   - apis/kubedb/v1alpha1
@@ -205,7 +207,7 @@ imports:
   - pkg/storage
   - pkg/validator
 - name: github.com/lib/pq
-  version: 69552e54d2a9d4c6a2438926a774930f7bc398ec
+  version: 23da1db4f16d9658a86ae9b717c245fc078f10f1
   subpackages:
   - oid
 - name: github.com/mailru/easyjson
@@ -341,7 +343,7 @@ imports:
   - unicode/norm
   - width
 - name: google.golang.org/api
-  version: f07af8828cedf46b54a535f7cd5b4d82a7d1cbbb
+  version: 513727a0f0db0404fd7639c243a29e466bed6ca4
   subpackages:
   - gensupport
   - googleapi
@@ -371,7 +373,7 @@ imports:
   repo: https://github.com/appscode/cron.git
   vcs: git
 - name: gopkg.in/yaml.v2
-  version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
+  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 - name: k8s.io/apiextensions-apiserver
   version: 5fa44608f6b9b2180a2fd1ecb52e651fd0397794
   subpackages:
@@ -416,6 +418,7 @@ imports:
   - pkg/util/framer
   - pkg/util/intstr
   - pkg/util/json
+  - pkg/util/jsonmergepatch
   - pkg/util/mergepatch
   - pkg/util/net
   - pkg/util/rand
