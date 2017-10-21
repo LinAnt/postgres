@@ -12,7 +12,7 @@ import (
 	kutildb "github.com/k8sdb/apimachinery/client/typed/kubedb/v1alpha1/util"
 	amc "github.com/k8sdb/apimachinery/pkg/controller"
 	"github.com/k8sdb/apimachinery/pkg/eventer"
-	apiv1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
@@ -246,7 +246,7 @@ func (c *Controller) ensureCustomResourceDefinition() {
 func (c *Controller) pushFailureEvent(postgres *tapi.Postgres, reason string) {
 	c.recorder.Eventf(
 		postgres.ObjectReference(),
-		apiv1.EventTypeWarning,
+		core.EventTypeWarning,
 		eventer.EventReasonFailedToStart,
 		`Fail to be ready Postgres: "%v". Reason: %v`,
 		postgres.Name,
@@ -259,6 +259,6 @@ func (c *Controller) pushFailureEvent(postgres *tapi.Postgres, reason string) {
 		return in
 	})
 	if err != nil {
-		c.recorder.Eventf(postgres.ObjectReference(), apiv1.EventTypeWarning, eventer.EventReasonFailedToUpdate, err.Error())
+		c.recorder.Eventf(postgres.ObjectReference(), core.EventTypeWarning, eventer.EventReasonFailedToUpdate, err.Error())
 	}
 }
