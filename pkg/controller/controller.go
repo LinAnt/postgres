@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
-	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 )
@@ -59,7 +59,7 @@ var _ amc.Snapshotter = &Controller{}
 var _ amc.Deleter = &Controller{}
 
 func New(
-	client clientset.Interface,
+	client kubernetes.Interface,
 	apiExtKubeClient apiextensionsclient.Interface,
 	extClient tcs.KubedbV1alpha1Interface,
 	promClient pcm.MonitoringV1alpha1Interface,
