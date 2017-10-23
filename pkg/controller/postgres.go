@@ -54,7 +54,7 @@ func (c *Controller) create(postgres *tapi.Postgres) error {
 		}
 		if err := c.ExtClient.Postgreses(postgres.Namespace).Delete(postgres.Name, &metav1.DeleteOptions{}); err != nil {
 			return fmt.Errorf(
-				`Failed to resume Postgres "%v" from DormantDatabase "%v". Error: %v`,
+				`failed to resume Postgres "%v" from DormantDatabase "%v". Error: %v`,
 				postgres.Name,
 				postgres.Name,
 				err,

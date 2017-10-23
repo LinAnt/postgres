@@ -1,5 +1,5 @@
 hash: eda54fd9d303e6df5c2eef78f463b8a1d49bd9b79e2e59deaac582fb19a67e3f
-updated: 2017-10-20T16:33:31.479976387-07:00
+updated: 2017-10-23T16:21:19.377084597-07:00
 imports:
 - name: cloud.google.com/go
   version: fe3d41e1ecb2ce36ad3a979037c9b9a2b726226f
@@ -20,7 +20,7 @@ imports:
   - version
   - wait
 - name: github.com/appscode/kutil
-  version: 6bc797dda352c4f8dfad7f0599574bba35724d12
+  version: 4d8a2fab71adaeb35394044fae59b03735ea4e39
   subpackages:
   - apps/v1beta1
   - core/v1
@@ -29,6 +29,8 @@ imports:
   version: 68e0e42e42c01371f3950571fc87c2298a51dd8f
   subpackages:
   - golog
+- name: github.com/appscode/mergo
+  version: e3000cb3d28c72b837601cac94debd91032d19fe
 - name: github.com/appscode/osm
   version: c4eb9d9f2fa11a22cd4b5f358afa5c89245059b4
   subpackages:
@@ -81,11 +83,11 @@ imports:
   subpackages:
   - quantile
 - name: github.com/coreos/prometheus-operator
-  version: d239e39e68ac8068ecdfb6854697f1bee777644e
+  version: cbdd1b519796673cd02d53b0e21999acbcbfe6e4
   repo: https://github.com/appscode/prometheus-operator.git
   vcs: git
   subpackages:
-  - pkg/client/monitoring/v1alpha1
+  - pkg/client/monitoring/v1
 - name: github.com/cpuguy83/go-md2man
   version: 71acacd42f85e5e82f70a55327789582a5200a90
   subpackages:
@@ -212,7 +214,7 @@ imports:
 - name: github.com/juju/ratelimit
   version: 5b9ff866471762aa2ab2dced63c9fb6f53921342
 - name: github.com/k8sdb/apimachinery
-  version: e3b48adc241f4851156ce4a5634ad790fdb74fb8
+  version: 8b792ad591d891f6710ab49aebef47e79cc908bf
   subpackages:
   - apis/kubedb
   - apis/kubedb/v1alpha1
@@ -227,7 +229,7 @@ imports:
   - pkg/storage
   - pkg/validator
 - name: github.com/lib/pq
-  version: 456514e2defec52e0cd37f90ccf17ec8b28295e2
+  version: b609790bd85edf8e9ab7e0f8912750a786177bcf
   subpackages:
   - oid
 - name: github.com/mailru/easyjson
@@ -269,7 +271,7 @@ imports:
 - name: github.com/peterbourgon/diskv
   version: 5f041e8faa004a95c88a202771f4cc3e991971e6
 - name: github.com/pkg/errors
-  version: 645ef00459ed84a119197bfb8d8205042c6df63d
+  version: a22138067af1c4942683050411a841ade67fe1eb
 - name: github.com/prometheus/client_golang
   version: e7e903064f5e9eb5da98208bae10b475d4db0f8c
   subpackages:
@@ -365,14 +367,14 @@ imports:
   - unicode/norm
   - width
 - name: google.golang.org/api
-  version: 15b905a38723467e1c9cea66cc58ab8ee5ddbfd8
+  version: 1575df15c1bb8b18ad4d9bc5ca495cc85b0764fe
   subpackages:
   - gensupport
   - googleapi
   - googleapi/internal/uritemplates
   - storage/v1
 - name: google.golang.org/appengine
-  version: 12d5545dc1cfa6047a286d5e853841b6471f4c19
+  version: 4f7eeb5305a4ba1966344836ba4af9996b7b4e05
   subpackages:
   - internal
   - internal/app_identity
@@ -428,7 +430,6 @@ imports:
   subpackages:
   - pkg/apis/apiextensions
   - pkg/apis/apiextensions/v1beta1
-  - pkg/client/clientset/clientset
   - pkg/client/clientset/clientset/scheme
   - pkg/client/clientset/clientset/typed/apiextensions/v1beta1
 - name: k8s.io/apimachinery

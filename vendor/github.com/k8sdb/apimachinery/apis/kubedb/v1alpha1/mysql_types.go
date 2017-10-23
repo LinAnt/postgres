@@ -1,4 +1,4 @@
-package kubedb
+package v1alpha1
 
 import (
 	"github.com/appscode/go/encoding/json/types"
@@ -7,30 +7,32 @@ import (
 )
 
 const (
-	ResourceCodeElasticsearch = "es"
-	ResourceKindElasticsearch = "Elasticsearch"
-	ResourceNameElasticsearch = "elasticsearch"
-	ResourceTypeElasticsearch = "elasticsearchs"
+	ResourceCodeMySQL = "ms"
+	ResourceKindMySQL = "MySQL"
+	ResourceNameMySQL = "mysql"
+	ResourceTypeMySQL = "mysqls"
 )
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Elasticsearch defines a Elasticsearch database.
-type Elasticsearch struct {
+// Mysql defines a Mysql database.
+type MySQL struct {
 	metav1.TypeMeta   `json:",inline,omitempty"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              ElasticsearchSpec   `json:"spec,omitempty"`
-	Status            ElasticsearchStatus `json:"status,omitempty"`
+	Spec              MySQLSpec   `json:"spec,omitempty"`
+	Status            MySQLStatus `json:"status,omitempty"`
 }
 
-type ElasticsearchSpec struct {
-	// Version of Elasticsearch to be deployed.
+type MySQLSpec struct {
+	// Version of Xdb to be deployed.
 	Version types.StrYo `json:"version,omitempty"`
-	// Number of instances to deploy for a Elasticsearch database.
+	// Number of instances to deploy for a Xdb database.
 	Replicas int32 `json:"replicas,omitempty"`
-	// Storage to specify how storage shall be used.
+	// Storage spec to specify how storage shall be used.
 	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty"`
+	// Database authentication secret
+	DatabaseSecret *core.SecretVolumeSource `json:"databaseSecret,omitempty"`
 	// NodeSelector is a selector which must be true for the pod to fit on a node
 	// +optional
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
@@ -40,8 +42,8 @@ type ElasticsearchSpec struct {
 	// BackupSchedule spec to specify how database backup will be taken
 	// +optional
 	BackupSchedule *BackupScheduleSpec `json:"backupSchedule,omitempty"`
-	// If DoNotPause is true, controller will prevent to delete this Elasticsearch object.
-	// Controller will create same Elasticsearch object and ignore other process.
+	// If DoNotPause is true, controller will prevent to delete this Mysql object.
+	// Controller will create same Mysql object and ignore other process.
 	// +optional
 	DoNotPause bool `json:"doNotPause,omitempty"`
 	// Monitor is used monitor database instance
@@ -61,7 +63,7 @@ type ElasticsearchSpec struct {
 	Tolerations []core.Toleration `json:"tolerations,omitempty" protobuf:"bytes,22,opt,name=tolerations"`
 }
 
-type ElasticsearchStatus struct {
+type MySQLStatus struct {
 	CreationTime *metav1.Time  `json:"creationTime,omitempty"`
 	Phase        DatabasePhase `json:"phase,omitempty"`
 	Reason       string        `json:"reason,omitempty"`
@@ -69,18 +71,9 @@ type ElasticsearchStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ElasticsearchList struct {
+type MySQLList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	// Items is a list of Elasticsearch CRD objects
-	Items []Elasticsearch `json:"items,omitempty"`
-}
-
-// +k8s:deepcopy-gen=false
-// +k8s:gen-deepcopy=false
-// Following structure is used for audit summary report
-type ElasticsearchSummary struct {
-	IdCount map[string]int64 `json:"idCount"`
-	Mapping interface{}      `json:"mapping"`
-	Setting interface{}      `json:"setting"`
+	// Items is a list of Xdb TPR objects
+	Items []*MySQL `json:"items,omitempty"`
 }

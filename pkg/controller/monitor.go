@@ -18,7 +18,7 @@ func (c *Controller) newMonitorController(postgres *tapi.Postgres) (monitor.Moni
 		return monitor.NewPrometheusController(c.Client, c.ApiExtKubeClient, c.promClient, c.opt.OperatorNamespace), nil
 	}
 
-	return nil, fmt.Errorf("Monitoring controller not found for %v", monitorSpec)
+	return nil, fmt.Errorf("monitoring controller not found for %v", monitorSpec)
 }
 
 func (c *Controller) addMonitor(postgres *tapi.Postgres) error {

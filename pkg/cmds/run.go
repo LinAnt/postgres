@@ -7,14 +7,14 @@ import (
 	"strings"
 
 	"github.com/appscode/go/log"
-	pcm "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
-	tapi "github.com/k8sdb/apimachinery/apis/kubedb/v1alpha1"
-	tcs "github.com/k8sdb/apimachinery/client/typed/kubedb/v1alpha1"
+	pcm "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	api "github.com/k8sdb/apimachinery/apis/kubedb/v1alpha1"
+	cs "github.com/k8sdb/apimachinery/client/typed/kubedb/v1alpha1"
 	amc "github.com/k8sdb/apimachinery/pkg/controller"
 	"github.com/k8sdb/apimachinery/pkg/migrator"
 	"github.com/k8sdb/postgres/pkg/controller"
 	"github.com/spf13/cobra"
-	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	crd_cs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -46,8 +46,8 @@ func NewCmdRun() *cobra.Command {
 			}
 
 			client := kubernetes.NewForConfigOrDie(config)
-			apiExtKubeClient := apiextensionsclient.NewForConfigOrDie(config)
-			extClient := tcs.NewForConfigOrDie(config)
+			apiExtKubeClient := crd_cs.NewForConfigOrDie(config)
+			extClient := cs.NewForConfigOrDie(config)
 			promClient, err := pcm.NewForConfig(config)
 			if err != nil {
 				log.Fatalln(err)
@@ -64,9 +64,9 @@ func NewCmdRun() *cobra.Command {
 
 			tprMigrator := migrator.NewMigrator(client, apiExtKubeClient, extClient)
 			err = tprMigrator.RunMigration(
-				&tapi.Postgres{},
-				&tapi.Snapshot{},
-				&tapi.DormantDatabase{},
+				&api.Postgres{},
+				&api.Snapshot{},
+				&api.DormantDatabase{},
 			)
 			if err != nil {
 				log.Fatalln(err)
