@@ -4,7 +4,6 @@ Run Postgres in Kubernetes
 
 ### Synopsis
 
-
 Run Postgres in Kubernetes
 
 ```
@@ -39,5 +38,6 @@ pg-operator run [flags]
 ```
 
 ### SEE ALSO
+
 * [pg-operator](pg-operator.md)	 - 
 

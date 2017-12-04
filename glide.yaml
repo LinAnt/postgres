@@ -1,4 +1,4 @@
-package: github.com/k8sdb/postgres
+package: github.com/kubedb/postgres
 import:
 - package: github.com/appscode/go
 - package: github.com/appscode/pat
@@ -20,7 +20,7 @@ import:
   repo: https://github.com/appscode/stow.git
   vcs: git
   version: master
-- package: github.com/k8sdb/apimachinery
+- package: github.com/kubedb/apimachinery
   version: master
 - package: github.com/spf13/cobra
   version: master
@@ -31,7 +31,7 @@ import:
 - package: github.com/sirupsen/logrus
   version: v1.0.3
 - package: github.com/appscode/kutil
-  version: release-5.0
+  version: master
 - package: k8s.io/api
   version: release-1.8
 - package: k8s.io/apimachinery
@@ -46,6 +46,10 @@ import:
   repo: https://github.com/appscode/kubernetes.git
   version: v1.8.3
   vcs: git
+- package: github.com/onsi/gomega
+  version: v1.2.0
+- package: github.com/onsi/ginkgo
+  version: v1.4.0
 testImport:
 - package: github.com/stretchr/testify
   version: v1.1.4

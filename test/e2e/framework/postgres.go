@@ -5,15 +5,16 @@ import (
 
 	"github.com/appscode/go/crypto/rand"
 	"github.com/appscode/go/encoding/json/types"
-	tapi "github.com/k8sdb/apimachinery/apis/kubedb/v1alpha1"
-	kutildb "github.com/k8sdb/apimachinery/client/typed/kubedb/v1alpha1/util"
+	"github.com/go-xorm/xorm"
+	api "github.com/kubedb/apimachinery/apis/kubedb/v1alpha1"
+	"github.com/kubedb/apimachinery/client/typed/kubedb/v1alpha1/util"
 	. "github.com/onsi/gomega"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (f *Invocation) Postgres() *tapi.Postgres {
-	return &tapi.Postgres{
+func (f *Invocation) Postgres() *api.Postgres {
+	return &api.Postgres{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      rand.WithUniqSuffix("postgres"),
 			Namespace: f.namespace,
@@ -21,23 +22,24 @@ func (f *Invocation) Postgres() *tapi.Postgres {
 				"app": f.app,
 			},
 		},
-		Spec: tapi.PostgresSpec{
-			Version: types.StrYo("9.5"),
+		Spec: api.PostgresSpec{
+			Version:  types.StrYo("9.6.5"),
+			Replicas: 1,
 		},
 	}
 }
 
-func (f *Framework) CreatePostgres(obj *tapi.Postgres) error {
+func (f *Framework) CreatePostgres(obj *api.Postgres) error {
 	_, err := f.extClient.Postgreses(obj.Namespace).Create(obj)
 	return err
 }
 
-func (f *Framework) GetPostgres(meta metav1.ObjectMeta) (*tapi.Postgres, error) {
+func (f *Framework) GetPostgres(meta metav1.ObjectMeta) (*api.Postgres, error) {
 	return f.extClient.Postgreses(meta.Namespace).Get(meta.Name, metav1.GetOptions{})
 }
 
-func (f *Framework) TryPatchPostgres(meta metav1.ObjectMeta, transform func(*tapi.Postgres) *tapi.Postgres) (*tapi.Postgres, error) {
-	return kutildb.TryPatchPostgres(f.extClient, meta, transform)
+func (f *Framework) TryPatchPostgres(meta metav1.ObjectMeta, transform func(*api.Postgres) *api.Postgres) (*api.Postgres, error) {
+	return util.TryPatchPostgres(f.extClient, meta, transform)
 }
 
 func (f *Framework) DeletePostgres(meta metav1.ObjectMeta) error {
@@ -62,12 +64,74 @@ func (f *Framework) EventuallyPostgres(meta metav1.ObjectMeta) GomegaAsyncAssert
 	)
 }
 
+func (f *Framework) EventuallyPostgresPodCount(meta metav1.ObjectMeta) GomegaAsyncAssertion {
+	return Eventually(
+		func() int32 {
+			st, err := f.kubeClient.AppsV1beta1().StatefulSets(meta.Namespace).Get(meta.Name, metav1.GetOptions{})
+			if err != nil {
+				if kerr.IsNotFound(err) {
+					return -1
+				} else {
+					Expect(err).NotTo(HaveOccurred())
+				}
+			}
+			return st.Status.ReadyReplicas
+		},
+		time.Minute*5,
+		time.Second*5,
+	)
+}
+
 func (f *Framework) EventuallyPostgresRunning(meta metav1.ObjectMeta) GomegaAsyncAssertion {
 	return Eventually(
 		func() bool {
 			postgres, err := f.extClient.Postgreses(meta.Namespace).Get(meta.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
-			return postgres.Status.Phase == tapi.DatabasePhaseRunning
+			return postgres.Status.Phase == api.DatabasePhaseRunning
+		},
+		time.Minute*5,
+		time.Second*5,
+	)
+}
+
+func (f *Framework) EventuallyPostgresClientReady(meta metav1.ObjectMeta) GomegaAsyncAssertion {
+	return Eventually(
+		func() bool {
+			db, err := f.GetPostgresClient(meta)
+			if err != nil {
+				return false
+			}
+
+			if err := f.CheckPostgres(db); err != nil {
+				return false
+			}
+			return true
+		},
+		time.Minute*5,
+		time.Second*5,
+	)
+}
+
+func (f *Framework) EventuallyPostgresTableCount(db *xorm.Engine) GomegaAsyncAssertion {
+	return Eventually(
+		func() int {
+			count, err := f.CountTable(db)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(count).To(Equal(count))
+			return count
+		},
+		time.Minute*5,
+		time.Second*5,
+	)
+}
+
+func (f *Framework) EventuallyPostgresArchiveCount(db *xorm.Engine) GomegaAsyncAssertion {
+	return Eventually(
+		func() int {
+			count, err := f.CountArchive(db)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(count).To(Equal(count))
+			return count
 		},
 		time.Minute*5,
 		time.Second*5,
