@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/appscode/go/log"
 	"github.com/appscode/go/types"
@@ -143,7 +144,7 @@ func (c *Controller) ensureCombinedNode(postgres *api.Postgres) error {
 					},
 					{
 						Name:  "ARCHIVE_S3_PREFIX",
-						Value: fmt.Sprintf("s3://%v/%v", archiverStorage.S3.Bucket, archiverStorage.S3.Prefix),
+						Value: fmt.Sprintf("s3://%v/%v/archive", archiverStorage.S3.Bucket, filepath.Join(archiverStorage.S3.Prefix, api.DatabaseNamePrefix, postgres.Namespace, postgres.Name)),
 					},
 				}...,
 			)
@@ -199,7 +200,7 @@ func upsertContainer(statefulSet *apps.StatefulSet, postgres *api.Postgres) *app
 	container := core.Container{
 		Name:            api.ResourceNamePostgres,
 		Image:           fmt.Sprintf("%v:%v-db", docker.ImagePostgres, postgres.Spec.Version),
-		ImagePullPolicy: core.PullAlways,
+		ImagePullPolicy: core.PullIfNotPresent,
 		SecurityContext: &core.SecurityContext{
 			Privileged: types.BoolP(false),
 			Capabilities: &core.Capabilities{
@@ -447,6 +448,7 @@ func upsertDataVolume(statefulSet *apps.StatefulSet, postgres *api.Postgres) *ap
 				statefulSet.Spec.Template.Spec.Volumes = volumes
 				return statefulSet
 			}
+			break
 		}
 	}
 	return statefulSet
