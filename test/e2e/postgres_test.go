@@ -19,24 +19,28 @@ const (
 	GCS_BUCKET_NAME      = "GCS_BUCKET_NAME"
 	AZURE_CONTAINER_NAME = "AZURE_CONTAINER_NAME"
 	SWIFT_CONTAINER_NAME = "SWIFT_CONTAINER_NAME"
-	WALE_S3_PREFIX       = "WALE_S3_PREFIX"
 )
 
 var _ = Describe("Postgres", func() {
 	var (
-		err         error
-		f           *framework.Invocation
-		postgres    *api.Postgres
-		snapshot    *api.Snapshot
-		secret      *core.Secret
-		skipMessage string
+		err                      error
+		f                        *framework.Invocation
+		postgres                 *api.Postgres
+		garbagePostgres          *api.PostgresList
+		snapshot                 *api.Snapshot
+		secret                   *core.Secret
+		skipMessage              string
+		skipSnapshotDataChecking bool
 	)
 
 	BeforeEach(func() {
 		f = root.Invoke()
 		postgres = f.Postgres()
+		garbagePostgres = new(api.PostgresList)
 		snapshot = f.Snapshot()
+		secret = new(core.Secret)
 		skipMessage = ""
+		skipSnapshotDataChecking = true
 	})
 
 	var createAndWaitForRunning = func() {
@@ -49,15 +53,18 @@ var _ = Describe("Postgres", func() {
 	}
 
 	var deleteTestResource = func() {
-		By("Delete postgres")
+		if postgres == nil {
+			Skip("Skipping")
+		}
+		By("Delete postgres: " + postgres.Name)
 		err = f.DeletePostgres(postgres.ObjectMeta)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Wait for postgres to be paused")
 		f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
 
-		By("WipeOut postgres")
-		_, err := f.TryPatchDormantDatabase(postgres.ObjectMeta, func(in *api.DormantDatabase) *api.DormantDatabase {
+		By("WipeOut postgres: " + postgres.Name)
+		_, err := f.PatchDormantDatabase(postgres.ObjectMeta, func(in *api.DormantDatabase) *api.DormantDatabase {
 			in.Spec.WipeOut = true
 			return in
 		})
@@ -70,6 +77,26 @@ var _ = Describe("Postgres", func() {
 		Expect(err).NotTo(HaveOccurred())
 	}
 
+	AfterEach(func() {
+		// Delete test resource
+		deleteTestResource()
+
+		for _, pg := range garbagePostgres.Items {
+			*postgres = pg
+			// Delete test resource
+			deleteTestResource()
+		}
+
+		if !skipSnapshotDataChecking {
+			By("Check for snapshot data")
+			f.EventuallySnapshotDataFound(snapshot).Should(BeFalse())
+		}
+
+		if secret != nil {
+			f.DeleteSecret(secret.ObjectMeta)
+		}
+	})
+
 	var shouldSuccessfullyRunning = func() {
 		if skipMessage != "" {
 			Skip(skipMessage)
@@ -77,9 +104,6 @@ var _ = Describe("Postgres", func() {
 
 		// Create Postgres
 		createAndWaitForRunning()
-
-		// Delete test resource
-		deleteTestResource()
 	}
 
 	Describe("Test", func() {
@@ -105,6 +129,9 @@ var _ = Describe("Postgres", func() {
 					}
 				})
 				It("should run successfully", func() {
+					if skipMessage != "" {
+						Skip(skipMessage)
+					}
 					// Create Postgres
 					createAndWaitForRunning()
 
@@ -124,25 +151,24 @@ var _ = Describe("Postgres", func() {
 					By("Checking Table")
 					f.EventuallyPostgresTableCount(pgClient).Should(Equal(3))
 
-					By("Update postgres to set Replicas=0")
-					pg, err := f.TryPatchPostgres(postgres.ObjectMeta, func(in *api.Postgres) *api.Postgres {
-						in.Spec.Replicas = 0
+					By("Delete postgres")
+					err = f.DeletePostgres(postgres.ObjectMeta)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("Wait for postgres to be paused")
+					f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
+
+					_, err = f.PatchDormantDatabase(postgres.ObjectMeta, func(in *api.DormantDatabase) *api.DormantDatabase {
+						in.Spec.Resume = true
 						return in
 					})
-					*postgres = *pg
+					Expect(err).NotTo(HaveOccurred())
 
-					By("Counting for Postgres Pod")
-					f.EventuallyPostgresPodCount(postgres.ObjectMeta).Should(BeZero())
+					By("Wait for DormantDatabase to be deleted")
+					f.EventuallyDormantDatabase(postgres.ObjectMeta).Should(BeFalse())
 
-					By("Update postgres to set Replicas=1")
-					pg, err = f.TryPatchPostgres(postgres.ObjectMeta, func(in *api.Postgres) *api.Postgres {
-						in.Spec.Replicas = 1
-						return in
-					})
-					*postgres = *pg
-
-					By("Counting for Postgres Pod")
-					f.EventuallyPostgresPodCount(postgres.ObjectMeta).Should(BeNumerically("==", 1))
+					By("Wait for Running postgres")
+					f.EventuallyPostgresRunning(postgres.ObjectMeta).Should(BeTrue())
 
 					By("Check for Postgres client")
 					f.EventuallyPostgresClientReady(postgres.ObjectMeta).Should(BeTrue())
@@ -152,14 +178,11 @@ var _ = Describe("Postgres", func() {
 
 					By("Checking Table")
 					f.EventuallyPostgresTableCount(pgClient).Should(Equal(3))
-
-					// Delete test resource
-					deleteTestResource()
 				})
 			})
 		})
 
-		Context("DoNotPause", func() {
+		XContext("DoNotPause", func() {
 			BeforeEach(func() {
 				postgres.Spec.DoNotPause = true
 			})
@@ -179,25 +202,16 @@ var _ = Describe("Postgres", func() {
 				f.EventuallyPostgresRunning(postgres.ObjectMeta).Should(BeTrue())
 
 				By("Update postgres to set DoNotPause=false")
-				f.TryPatchPostgres(postgres.ObjectMeta, func(in *api.Postgres) *api.Postgres {
+				f.PatchPostgres(postgres.ObjectMeta, func(in *api.Postgres) *api.Postgres {
 					in.Spec.DoNotPause = false
 					return in
 				})
-
-				// Delete test resource
-				deleteTestResource()
 			})
 		})
 
 		Context("Snapshot", func() {
-			var skipDataCheck bool
-
-			AfterEach(func() {
-				f.DeleteSecret(secret.ObjectMeta)
-			})
-
 			BeforeEach(func() {
-				skipDataCheck = false
+				skipSnapshotDataChecking = false
 				snapshot.Spec.DatabaseName = postgres.Name
 			})
 
@@ -211,26 +225,18 @@ var _ = Describe("Postgres", func() {
 				By("Create Snapshot")
 				f.CreateSnapshot(snapshot)
 
-				By("Check for Successed snapshot")
+				By("Check for Succeeded snapshot")
 				f.EventuallySnapshotPhase(snapshot.ObjectMeta).Should(Equal(api.SnapshotPhaseSuccessed))
 
-				if !skipDataCheck {
+				if !skipSnapshotDataChecking {
 					By("Check for snapshot data")
 					f.EventuallySnapshotDataFound(snapshot).Should(BeTrue())
-				}
-
-				// Delete test resource
-				deleteTestResource()
-
-				if !skipDataCheck {
-					By("Check for snapshot data")
-					f.EventuallySnapshotDataFound(snapshot).Should(BeFalse())
 				}
 			}
 
 			Context("In Local", func() {
 				BeforeEach(func() {
-					skipDataCheck = true
+					skipSnapshotDataChecking = true
 					secret = f.SecretForLocalBackend()
 					snapshot.Spec.StorageSecretName = secret.Name
 					snapshot.Spec.Local = &api.LocalSpec{
@@ -320,19 +326,13 @@ var _ = Describe("Postgres", func() {
 
 					By("Checking Table")
 					f.EventuallyPostgresTableCount(pgClient).Should(Equal(1))
-
-					// Delete test resource
-					deleteTestResource()
 				})
 
 			})
 
 			Context("With Snapshot", func() {
-				AfterEach(func() {
-					f.DeleteSecret(secret.ObjectMeta)
-				})
-
 				BeforeEach(func() {
+					skipSnapshotDataChecking = false
 					secret = f.SecretForS3Backend()
 					snapshot.Spec.StorageSecretName = secret.Name
 					snapshot.Spec.S3 = &api.S3Spec{
@@ -367,7 +367,7 @@ var _ = Describe("Postgres", func() {
 					By("Create Snapshot")
 					f.CreateSnapshot(snapshot)
 
-					By("Check for Successed snapshot")
+					By("Check for Succeeded snapshot")
 					f.EventuallySnapshotPhase(snapshot.ObjectMeta).Should(Equal(api.SnapshotPhaseSuccessed))
 
 					By("Check for snapshot data")
@@ -375,6 +375,8 @@ var _ = Describe("Postgres", func() {
 
 					oldPostgres, err := f.GetPostgres(postgres.ObjectMeta)
 					Expect(err).NotTo(HaveOccurred())
+
+					garbagePostgres.Items = append(garbagePostgres.Items, *oldPostgres)
 
 					By("Create postgres from snapshot")
 					*postgres = *f.Postgres()
@@ -397,12 +399,6 @@ var _ = Describe("Postgres", func() {
 
 					By("Checking Table")
 					f.EventuallyPostgresTableCount(pgClient).Should(Equal(3))
-
-					// Delete test resource
-					deleteTestResource()
-					*postgres = *oldPostgres
-					// Delete test resource
-					deleteTestResource()
 				})
 			})
 		})
@@ -423,7 +419,7 @@ var _ = Describe("Postgres", func() {
 				By("Wait for postgres to be paused")
 				f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
 
-				_, err = f.TryPatchDormantDatabase(postgres.ObjectMeta, func(in *api.DormantDatabase) *api.DormantDatabase {
+				_, err = f.PatchDormantDatabase(postgres.ObjectMeta, func(in *api.DormantDatabase) *api.DormantDatabase {
 					in.Spec.Resume = true
 					return in
 				})
@@ -435,17 +431,14 @@ var _ = Describe("Postgres", func() {
 				By("Wait for Running postgres")
 				f.EventuallyPostgresRunning(postgres.ObjectMeta).Should(BeTrue())
 
-				_postgres, err := f.GetPostgres(postgres.ObjectMeta)
+				pg, err := f.GetPostgres(postgres.ObjectMeta)
 				Expect(err).NotTo(HaveOccurred())
 
-				*postgres = *_postgres
+				*postgres = *pg
 				if usedInitSpec {
 					Expect(postgres.Spec.Init).Should(BeNil())
 					Expect(postgres.Annotations[api.PostgresInitSpec]).ShouldNot(BeEmpty())
 				}
-
-				// Delete test resource
-				deleteTestResource()
 			}
 
 			Context("-", func() {
@@ -497,9 +490,6 @@ var _ = Describe("Postgres", func() {
 
 					postgres, err = f.GetPostgres(postgres.ObjectMeta)
 					Expect(err).NotTo(HaveOccurred())
-
-					// Delete test resource
-					deleteTestResource()
 				})
 				Context("with init", func() {
 					BeforeEach(func() {
@@ -542,19 +532,12 @@ var _ = Describe("Postgres", func() {
 							_, err := f.GetPostgres(postgres.ObjectMeta)
 							Expect(err).NotTo(HaveOccurred())
 						}
-
-						// Delete test resource
-						deleteTestResource()
 					})
 				})
 			})
 		})
 
 		Context("SnapshotScheduler", func() {
-			AfterEach(func() {
-				f.DeleteSecret(secret.ObjectMeta)
-			})
-
 			BeforeEach(func() {
 				secret = f.SecretForLocalBackend()
 			})
@@ -584,8 +567,6 @@ var _ = Describe("Postgres", func() {
 
 					By("Count multiple Snapshot")
 					f.EventuallySnapshotCount(postgres.ObjectMeta).Should(matcher.MoreThan(3))
-
-					deleteTestResource()
 				})
 			})
 
@@ -598,7 +579,7 @@ var _ = Describe("Postgres", func() {
 					f.CreateSecret(secret)
 
 					By("Update postgres")
-					_, err = f.TryPatchPostgres(postgres.ObjectMeta, func(in *api.Postgres) *api.Postgres {
+					_, err = f.PatchPostgres(postgres.ObjectMeta, func(in *api.Postgres) *api.Postgres {
 						in.Spec.BackupSchedule = &api.BackupScheduleSpec{
 							CronExpression: "@every 1m",
 							SnapshotStorageSpec: api.SnapshotStorageSpec{
@@ -618,8 +599,6 @@ var _ = Describe("Postgres", func() {
 
 					By("Count multiple Snapshot")
 					f.EventuallySnapshotCount(postgres.ObjectMeta).Should(matcher.MoreThan(3))
-
-					deleteTestResource()
 				})
 			})
 		})
@@ -632,7 +611,6 @@ var _ = Describe("Postgres", func() {
 						StorageSecretName: secret.Name,
 						S3: &api.S3Spec{
 							Bucket: os.Getenv(S3_BUCKET_NAME),
-							Prefix: postgres.Name,
 						},
 					},
 				}
@@ -672,8 +650,8 @@ var _ = Describe("Postgres", func() {
 				oldPostgres, err := f.GetPostgres(postgres.ObjectMeta)
 				Expect(err).NotTo(HaveOccurred())
 
-				// Delete test resource
-				deleteTestResource()
+				garbagePostgres.Items = append(garbagePostgres.Items, *oldPostgres)
+
 				// -- > 1st Postgres < --
 
 				// -- > 2nd Postgres < --
@@ -683,7 +661,6 @@ var _ = Describe("Postgres", func() {
 						StorageSecretName: secret.Name,
 						S3: &api.S3Spec{
 							Bucket: os.Getenv(S3_BUCKET_NAME),
-							Prefix: postgres.Name,
 						},
 					},
 				}
@@ -693,7 +670,7 @@ var _ = Describe("Postgres", func() {
 							StorageSecretName: secret.Name,
 							S3: &api.S3Spec{
 								Bucket: os.Getenv(S3_BUCKET_NAME),
-								Prefix: oldPostgres.Name,
+								Prefix: fmt.Sprintf("kubedb/%s/%s/archive/", postgres.Namespace, oldPostgres.Name),
 							},
 						},
 					},
@@ -725,8 +702,8 @@ var _ = Describe("Postgres", func() {
 				oldPostgres, err = f.GetPostgres(postgres.ObjectMeta)
 				Expect(err).NotTo(HaveOccurred())
 
-				// Delete test resource
-				deleteTestResource()
+				garbagePostgres.Items = append(garbagePostgres.Items, *oldPostgres)
+
 				// -- > 2nd Postgres < --
 
 				// -- > 3rd Postgres < --
@@ -737,7 +714,7 @@ var _ = Describe("Postgres", func() {
 							StorageSecretName: secret.Name,
 							S3: &api.S3Spec{
 								Bucket: os.Getenv(S3_BUCKET_NAME),
-								Prefix: oldPostgres.Name,
+								Prefix: fmt.Sprintf("kubedb/%s/%s/archive/", postgres.Namespace, oldPostgres.Name),
 							},
 						},
 					},
@@ -754,11 +731,7 @@ var _ = Describe("Postgres", func() {
 
 				By("Checking Table")
 				f.EventuallyPostgresTableCount(pgClient).Should(Equal(6))
-
-				// Delete test resource
-				deleteTestResource()
 			})
-
 		})
 
 	})
