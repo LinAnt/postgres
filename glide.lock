@@ -1,5 +1,5 @@
-hash: 8ae5854f53887b8634180764bba78041d7af858e045ceed7ba9345855d89460f
-updated: 2018-01-03T16:28:03.380578461+06:00
+hash: 0b87f314ae9b4b233b9671f9df364009f935f79a0ea2c29ab890ea6515270c24
+updated: 2018-01-06T17:25:33.308213467-08:00
 imports:
 - name: cloud.google.com/go
   version: fe3d41e1ecb2ce36ad3a979037c9b9a2b726226f
@@ -7,7 +7,7 @@ imports:
   - compute/metadata
   - internal
 - name: github.com/appscode/go
-  version: 9a3559e6132eda4069baad2c63689729f5d20ac4
+  version: f08cee5a2aa53a1ab6d30e4ae11e381d1b265f81
   subpackages:
   - analytics
   - context
@@ -42,7 +42,7 @@ imports:
 - name: github.com/appscode/mergo
   version: e3000cb3d28c72b837601cac94debd91032d19fe
 - name: github.com/appscode/osm
-  version: bd094241594e26fce6d54e17db21ff253df8cd22
+  version: 8175dd853f6f3d4530b14018901c79140e305f3a
   subpackages:
   - context
 - name: github.com/appscode/pat
@@ -99,7 +99,7 @@ imports:
   subpackages:
   - pkg/client/monitoring/v1
 - name: github.com/cpuguy83/go-md2man
-  version: 71acacd42f85e5e82f70a55327789582a5200a90
+  version: 8d868be6e9bf9d5350910bab97a050e49887600f
   subpackages:
   - md2man
 - name: github.com/davecgh/go-spew
@@ -156,7 +156,7 @@ imports:
   - proto
   - sortkeys
 - name: github.com/golang/glog
-  version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
+  version: 44145f04b68cf362d9c4df2182967c2275eaefed
 - name: github.com/golang/groupcache
   version: 02826c3e79038b59d737d3b1c0a1d937f71a4433
   subpackages:
@@ -173,7 +173,7 @@ imports:
 - name: github.com/google/btree
   version: 7d79101e329e5a3adf994758c578dab82b90c017
 - name: github.com/google/go-cmp
-  version: 97a1ff3c48253a51c601f6e4420181273b6ca0ea
+  version: 97aa668b73e764ccdd786bc3ccd2edffe621150e
   subpackages:
   - cmp
   - cmp/internal/diff
@@ -208,7 +208,7 @@ imports:
   subpackages:
   - diskcache
 - name: github.com/hashicorp/go-version
-  version: ac737305c16432f4c660c6fc68cdcda4b5a0b5ae
+  version: 1b1de86cf2ec13494b6814b48157884efaf71c54
   repo: https://github.com/appscode/go-version.git
   vcs: git
 - name: github.com/hashicorp/golang-lru
@@ -234,7 +234,7 @@ imports:
 - name: github.com/juju/ratelimit
   version: 5b9ff866471762aa2ab2dced63c9fb6f53921342
 - name: github.com/kubedb/apimachinery
-  version: c62e5c9ee18651a8183c708df55ec8abd6ee2083
+  version: 7604bdfdd4e2b6f1c301847c8d43ecd8e726dc9d
   subpackages:
   - apis/kubedb
   - apis/kubedb/v1alpha1
@@ -250,7 +250,7 @@ imports:
   - pkg/storage
   - pkg/validator
 - name: github.com/kubernetes/apimachinery
-  version: cc51b76607439c12d6bfa78aab2a81e46107b24f
+  version: 91d8586aac31d9086939d077ba556d2c7fb157b4
   subpackages:
   - pkg/conversion
 - name: github.com/lib/pq
@@ -412,14 +412,14 @@ imports:
   - unicode/norm
   - width
 - name: google.golang.org/api
-  version: 99aea8c56b9527d6ca9dc96b743c94e184ab704b
+  version: b1c0f9b3aa8fac163224fab909402d49c6dce50a
   subpackages:
   - gensupport
   - googleapi
   - googleapi/internal/uritemplates
   - storage/v1
 - name: google.golang.org/appengine
-  version: 5bee14b453b4c71be47ec1781b0fa61c2ea182db
+  version: 4f7eeb5305a4ba1966344836ba4af9996b7b4e05
   subpackages:
   - internal
   - internal/app_identity
