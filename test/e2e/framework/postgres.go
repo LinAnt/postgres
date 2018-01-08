@@ -123,7 +123,9 @@ func (f *Framework) EventuallyPostgresTableCount(db *xorm.Engine) GomegaAsyncAss
 		func() int {
 			count, err := f.CountTable(db)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(count).To(Equal(count))
+			if err != nil {
+				return -1
+			}
 			return count
 		},
 		time.Minute*5,
@@ -135,8 +137,9 @@ func (f *Framework) EventuallyPostgresArchiveCount(db *xorm.Engine) GomegaAsyncA
 	return Eventually(
 		func() int {
 			count, err := f.CountArchive(db)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(count).To(Equal(count))
+			if err != nil {
+				return -1
+			}
 			return count
 		},
 		time.Minute*5,

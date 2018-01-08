@@ -24,15 +24,17 @@ import (
 )
 
 var (
-	storageClass string
-	registry     string
-	enableRbac   bool
+	storageClass       string
+	registry           string
+	enableRbac         bool
+	providedController bool
 )
 
 func init() {
 	flag.StringVar(&storageClass, "storageclass", "", "Kubernetes StorageClass name")
 	flag.StringVar(&registry, "docker-registry", "kubedb", "User provided docker repository")
 	flag.BoolVar(&enableRbac, "rbac", false, "Enable RBAC for database workloads")
+	flag.BoolVar(&providedController, "provided-controller", false, "Enable this for provided controller")
 }
 
 const (
@@ -76,28 +78,31 @@ var _ = BeforeSuite(func() {
 	err = root.CreateNamespace()
 	Expect(err).NotTo(HaveOccurred())
 
-	cronController := snapc.NewCronController(kubeClient, extClient)
-	// Start Cron
-	cronController.StartCron()
+	if !providedController {
+		cronController := snapc.NewCronController(kubeClient, extClient)
+		// Start Cron
+		cronController.StartCron()
 
-	opt := controller.Options{
-		Docker: docker.Docker{
-			Registry: registry,
-		},
-		OperatorNamespace: root.Namespace(),
-		GoverningService:  api.DatabaseNamePrefix,
-		MaxNumRequeues:    5,
-		EnableRbac:        enableRbac,
-		AnalyticsClientID: "$kubedb$postgres$e2e",
+		opt := controller.Options{
+			Docker: docker.Docker{
+				Registry: registry,
+			},
+			OperatorNamespace: root.Namespace(),
+			GoverningService:  api.DatabaseNamePrefix,
+			MaxNumRequeues:    5,
+			EnableRbac:        enableRbac,
+			AnalyticsClientID: "$kubedb$postgres$e2e",
+		}
+
+		// Controller
+		ctrl = controller.New(kubeClient, apiExtKubeClient, extClient, nil, cronController, opt)
+		err = ctrl.Setup()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		ctrl.Run()
 	}
 
-	// Controller
-	ctrl = controller.New(kubeClient, apiExtKubeClient, extClient, nil, cronController, opt)
-	err = ctrl.Setup()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	ctrl.Run()
 })
 
 var _ = AfterSuite(func() {

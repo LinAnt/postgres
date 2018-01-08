@@ -645,7 +645,7 @@ var _ = Describe("Postgres", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking Archive")
-				f.EventuallyPostgresArchiveCount(pgClient).Should(BeNumerically(">", count))
+				f.EventuallyPostgresArchiveCount(pgClient).Should(SatisfyAll(Not(Equal(-1)), BeNumerically(">", count)))
 
 				oldPostgres, err := f.GetPostgres(postgres.ObjectMeta)
 				Expect(err).NotTo(HaveOccurred())
@@ -697,7 +697,7 @@ var _ = Describe("Postgres", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking Archive")
-				f.EventuallyPostgresArchiveCount(pgClient).Should(BeNumerically(">", count))
+				f.EventuallyPostgresArchiveCount(pgClient).Should(SatisfyAll(Not(Equal(-1)), BeNumerically(">", count)))
 
 				oldPostgres, err = f.GetPostgres(postgres.ObjectMeta)
 				Expect(err).NotTo(HaveOccurred())
