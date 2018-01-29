@@ -1,5 +1,5 @@
-hash: 3edc1b5b43b5f3a64c53614f58a1f45aac8e2dd9530bd933222de2369e2e5cd6
-updated: 2018-01-28T20:59:52.88431724-08:00
+hash: 4faa831cf51b8836ec46f494e5eb61e30ad648c074d9fcbb93d9e1cf240355c7
+updated: 2018-01-29T06:35:36.992398587-08:00
 imports:
 - name: cloud.google.com/go
   version: fe3d41e1ecb2ce36ad3a979037c9b9a2b726226f
@@ -32,7 +32,7 @@ imports:
   - agents/prometheusbuiltin
   - api
 - name: github.com/appscode/kutil
-  version: 60ced7f055b34d512a84f65ca0a7d412ec3d6ef2
+  version: a035b515d68bca793b2beacdf52e19a02f914017
   subpackages:
   - apiextensions/v1beta1
   - apps/v1beta1
@@ -233,7 +233,7 @@ imports:
 - name: github.com/juju/ratelimit
   version: 5b9ff866471762aa2ab2dced63c9fb6f53921342
 - name: github.com/kubedb/apimachinery
-  version: 455d1a753fcd939ecb9497ed4ab77567207c155c
+  version: 0de29010181b4b361fb210d5a85de7a4ff56e9df
   subpackages:
   - apis/kubedb
   - apis/kubedb/v1alpha1
