@@ -1,6 +1,7 @@
 package cmds
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -8,11 +9,10 @@ import (
 
 	"github.com/appscode/go/log"
 	stringz "github.com/appscode/go/strings"
+	"github.com/appscode/kutil/tools/analytics"
 	pcm "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	api "github.com/kubedb/apimachinery/apis/kubedb/v1alpha1"
 	cs "github.com/kubedb/apimachinery/client/typed/kubedb/v1alpha1"
 	snapc "github.com/kubedb/apimachinery/pkg/controller/snapshot"
-	"github.com/kubedb/apimachinery/pkg/migrator"
 	"github.com/kubedb/postgres/pkg/controller"
 	"github.com/kubedb/postgres/pkg/docker"
 	"github.com/spf13/cobra"
@@ -23,23 +23,28 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func NewCmdRun(version string) *cobra.Command {
-	var (
-		masterURL      string
-		kubeconfigPath string
-	)
-
-	opt := controller.Options{
+var (
+	opt = controller.Options{
 		Docker: docker.Docker{
 			Registry:    "kubedb",
-			ExporterTag: stringz.Val(version, "canary"),
+			ExporterTag: "canary",
 		},
 		OperatorNamespace: namespace(),
 		GoverningService:  "kubedb",
 		Address:           ":8080",
 		EnableRbac:        false,
-		AnalyticsClientID: analyticsClientID,
+		EnableAnalytics:   true,
+		AnalyticsClientID: analytics.ClientID(),
 	}
+)
+
+func NewCmdRun(version string) *cobra.Command {
+	var (
+		masterURL          string
+		kubeconfigPath     string
+		prometheusCrdGroup = pcm.Group
+		prometheusCrdKinds = pcm.DefaultCrdKinds
+	)
 
 	cmd := &cobra.Command{
 		Use:               "run",
@@ -54,7 +59,7 @@ func NewCmdRun(version string) *cobra.Command {
 			client := kubernetes.NewForConfigOrDie(config)
 			apiExtKubeClient := crd_cs.NewForConfigOrDie(config)
 			extClient := cs.NewForConfigOrDie(config)
-			promClient, err := pcm.NewForConfig(config)
+			promClient, err := pcm.NewForConfig(&prometheusCrdKinds, prometheusCrdGroup, config)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -74,16 +79,6 @@ func NewCmdRun(version string) *cobra.Command {
 				log.Fatalln(err)
 			}
 
-			tprMigrator := migrator.NewMigrator(client, apiExtKubeClient, extClient)
-			err = tprMigrator.RunMigration(
-				&api.Postgres{},
-				&api.Snapshot{},
-				&api.DormantDatabase{},
-			)
-			if err != nil {
-				log.Fatalln(err)
-			}
-
 			fmt.Println("Starting operator...")
 
 			w.RunAndHold()
@@ -94,9 +89,14 @@ func NewCmdRun(version string) *cobra.Command {
 	cmd.Flags().StringVar(&kubeconfigPath, "kubeconfig", kubeconfigPath, "Path to kubeconfig file with authorization information (the master location is set by the master flag).")
 	cmd.Flags().StringVar(&opt.GoverningService, "governing-service", opt.GoverningService, "Governing service for database statefulset")
 	cmd.Flags().StringVar(&opt.Docker.Registry, "docker-registry", opt.Docker.Registry, "User provided docker repository")
-	cmd.Flags().StringVar(&opt.Docker.ExporterTag, "exporter-tag", opt.Docker.ExporterTag, "Tag of kubedb/operator used as exporter")
+	cmd.Flags().StringVar(&opt.Docker.ExporterTag, "exporter-tag", stringz.Val(version, opt.Docker.ExporterTag), "Tag of kubedb/operator used as exporter")
 	cmd.Flags().StringVar(&opt.Address, "address", opt.Address, "Address to listen on for web interface and telemetry.")
 	cmd.Flags().BoolVar(&opt.EnableRbac, "rbac", opt.EnableRbac, "Enable RBAC for database workloads")
+
+	fs := flag.NewFlagSet("prometheus", flag.ExitOnError)
+	fs.StringVar(&prometheusCrdGroup, "prometheus-crd-apigroup", prometheusCrdGroup, "prometheus CRD  API group name")
+	fs.Var(&prometheusCrdKinds, "prometheus-crd-kinds", " - EXPERIMENTAL (could be removed in future releases) - customize CRD kind names")
+	cmd.Flags().AddGoFlagSet(fs)
 
 	return cmd
 }

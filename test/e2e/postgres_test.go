@@ -135,21 +135,14 @@ var _ = Describe("Postgres", func() {
 					// Create Postgres
 					createAndWaitForRunning()
 
-					By("Check for Postgres client")
-					f.EventuallyPostgresClientReady(postgres.ObjectMeta).Should(BeTrue())
-
-					pgClient, err := f.GetPostgresClient(postgres.ObjectMeta)
-					Expect(err).NotTo(HaveOccurred())
-
-					err = f.CreateSchema(pgClient)
-					Expect(err).NotTo(HaveOccurred())
+					By("Creating Schema")
+					f.EventuallyCreateSchema(postgres.ObjectMeta).Should(BeTrue())
 
 					By("Creating Table")
-					err = f.CreateTable(pgClient, 3)
-					Expect(err).NotTo(HaveOccurred())
+					f.EventuallyCreateTable(postgres.ObjectMeta, 3).Should(BeTrue())
 
 					By("Checking Table")
-					f.EventuallyPostgresTableCount(pgClient).Should(Equal(3))
+					f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(3))
 
 					By("Delete postgres")
 					err = f.DeletePostgres(postgres.ObjectMeta)
@@ -170,14 +163,8 @@ var _ = Describe("Postgres", func() {
 					By("Wait for Running postgres")
 					f.EventuallyPostgresRunning(postgres.ObjectMeta).Should(BeTrue())
 
-					By("Check for Postgres client")
-					f.EventuallyPostgresClientReady(postgres.ObjectMeta).Should(BeTrue())
-
-					pgClient, err = f.GetPostgresClient(postgres.ObjectMeta)
-					Expect(err).NotTo(HaveOccurred())
-
 					By("Checking Table")
-					f.EventuallyPostgresTableCount(pgClient).Should(Equal(3))
+					f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(3))
 				})
 			})
 		})
@@ -226,7 +213,7 @@ var _ = Describe("Postgres", func() {
 				f.CreateSnapshot(snapshot)
 
 				By("Check for Succeeded snapshot")
-				f.EventuallySnapshotPhase(snapshot.ObjectMeta).Should(Equal(api.SnapshotPhaseSuccessed))
+				f.EventuallySnapshotPhase(snapshot.ObjectMeta).Should(Equal(api.SnapshotPhaseSucceeded))
 
 				if !skipSnapshotDataChecking {
 					By("Check for snapshot data")
@@ -318,14 +305,8 @@ var _ = Describe("Postgres", func() {
 					// Create Postgres
 					createAndWaitForRunning()
 
-					By("Check for Postgres client")
-					f.EventuallyPostgresClientReady(postgres.ObjectMeta).Should(BeTrue())
-
-					pgClient, err := f.GetPostgresClient(postgres.ObjectMeta)
-					Expect(err).NotTo(HaveOccurred())
-
 					By("Checking Table")
-					f.EventuallyPostgresTableCount(pgClient).Should(Equal(1))
+					f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(1))
 				})
 
 			})
@@ -345,21 +326,14 @@ var _ = Describe("Postgres", func() {
 					// Create and wait for running Postgres
 					createAndWaitForRunning()
 
-					By("Check for Postgres client")
-					f.EventuallyPostgresClientReady(postgres.ObjectMeta).Should(BeTrue())
-
-					pgClient, err := f.GetPostgresClient(postgres.ObjectMeta)
-					Expect(err).NotTo(HaveOccurred())
-
-					err = f.CreateSchema(pgClient)
-					Expect(err).NotTo(HaveOccurred())
+					By("Creating Schema")
+					f.EventuallyCreateSchema(postgres.ObjectMeta).Should(BeTrue())
 
 					By("Creating Table")
-					err = f.CreateTable(pgClient, 3)
-					Expect(err).NotTo(HaveOccurred())
+					f.EventuallyCreateTable(postgres.ObjectMeta, 3).Should(BeTrue())
 
 					By("Checking Table")
-					f.EventuallyPostgresTableCount(pgClient).Should(Equal(3))
+					f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(3))
 
 					By("Create Secret")
 					f.CreateSecret(secret)
@@ -368,7 +342,7 @@ var _ = Describe("Postgres", func() {
 					f.CreateSnapshot(snapshot)
 
 					By("Check for Succeeded snapshot")
-					f.EventuallySnapshotPhase(snapshot.ObjectMeta).Should(Equal(api.SnapshotPhaseSuccessed))
+					f.EventuallySnapshotPhase(snapshot.ObjectMeta).Should(Equal(api.SnapshotPhaseSucceeded))
 
 					By("Check for snapshot data")
 					f.EventuallySnapshotDataFound(snapshot).Should(BeTrue())
@@ -391,22 +365,16 @@ var _ = Describe("Postgres", func() {
 					// Create and wait for running Postgres
 					createAndWaitForRunning()
 
-					By("Check for Postgres client")
-					f.EventuallyPostgresClientReady(postgres.ObjectMeta).Should(BeTrue())
-
-					pgClient, err = f.GetPostgresClient(postgres.ObjectMeta)
-					Expect(err).NotTo(HaveOccurred())
-
 					By("Checking Table")
-					f.EventuallyPostgresTableCount(pgClient).Should(Equal(3))
+					f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(3))
 				})
 			})
 		})
 
 		Context("Resume", func() {
-			var usedInitSpec bool
+			var usedInitialized bool
 			BeforeEach(func() {
-				usedInitSpec = false
+				usedInitialized = false
 			})
 
 			var shouldResumeSuccessfully = func() {
@@ -435,9 +403,9 @@ var _ = Describe("Postgres", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				*postgres = *pg
-				if usedInitSpec {
-					Expect(postgres.Spec.Init).Should(BeNil())
-					Expect(postgres.Annotations[api.GenericInitSpec]).ShouldNot(BeEmpty())
+				if usedInitialized {
+					_, ok := postgres.Annotations[api.AnnotationInitialized]
+					Expect(ok).Should(BeTrue())
 				}
 			}
 
@@ -447,7 +415,6 @@ var _ = Describe("Postgres", func() {
 
 			Context("With Init", func() {
 				BeforeEach(func() {
-					usedInitSpec = true
 					postgres.Spec.Init = &api.InitSpec{
 						ScriptSource: &api.ScriptSourceSpec{
 							VolumeSource: core.VolumeSource{
@@ -493,7 +460,7 @@ var _ = Describe("Postgres", func() {
 				})
 				Context("with init", func() {
 					BeforeEach(func() {
-						usedInitSpec = true
+						usedInitialized = true
 						postgres.Spec.Init = &api.InitSpec{
 							ScriptSource: &api.ScriptSourceSpec{
 								ScriptPath: "postgres-init-scripts/run.sh",
@@ -624,28 +591,17 @@ var _ = Describe("Postgres", func() {
 				// Create Postgres
 				createAndWaitForRunning()
 
-				By("Check for Postgres client")
-				f.EventuallyPostgresClientReady(postgres.ObjectMeta).Should(BeTrue())
-
-				pgClient, err := f.GetPostgresClient(postgres.ObjectMeta)
-				Expect(err).NotTo(HaveOccurred())
-
-				err = f.CreateSchema(pgClient)
-				Expect(err).NotTo(HaveOccurred())
+				By("Creating Schema")
+				f.EventuallyCreateSchema(postgres.ObjectMeta).Should(BeTrue())
 
 				By("Creating Table")
-				err = f.CreateTable(pgClient, 3)
-				Expect(err).NotTo(HaveOccurred())
+				f.EventuallyCreateTable(postgres.ObjectMeta, 3).Should(BeTrue())
 
 				By("Checking Table")
-				f.EventuallyPostgresTableCount(pgClient).Should(Equal(3))
-
-				By("Count Archive")
-				count, err := f.CountArchive(pgClient)
-				Expect(err).NotTo(HaveOccurred())
+				f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(3))
 
 				By("Checking Archive")
-				f.EventuallyPostgresArchiveCount(pgClient).Should(SatisfyAll(Not(Equal(-1)), BeNumerically(">", count)))
+				f.EventuallyCountArchive(postgres.ObjectMeta).Should(BeTrue())
 
 				oldPostgres, err := f.GetPostgres(postgres.ObjectMeta)
 				Expect(err).NotTo(HaveOccurred())
@@ -679,25 +635,14 @@ var _ = Describe("Postgres", func() {
 				// Create Postgres
 				createAndWaitForRunning()
 
-				By("Check for Postgres client")
-				f.EventuallyPostgresClientReady(postgres.ObjectMeta).Should(BeTrue())
-
-				pgClient, err = f.GetPostgresClient(postgres.ObjectMeta)
-				Expect(err).NotTo(HaveOccurred())
-
 				By("Creating Table")
-				err = f.CreateTable(pgClient, 3)
-				Expect(err).NotTo(HaveOccurred())
+				f.EventuallyCreateTable(postgres.ObjectMeta, 3).Should(BeTrue())
 
 				By("Checking Table")
-				f.EventuallyPostgresTableCount(pgClient).Should(Equal(6))
-
-				By("Count Archive")
-				count, err = f.CountArchive(pgClient)
-				Expect(err).NotTo(HaveOccurred())
+				f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(6))
 
 				By("Checking Archive")
-				f.EventuallyPostgresArchiveCount(pgClient).Should(SatisfyAll(Not(Equal(-1)), BeNumerically(">", count)))
+				f.EventuallyCountArchive(postgres.ObjectMeta).Should(BeTrue())
 
 				oldPostgres, err = f.GetPostgres(postgres.ObjectMeta)
 				Expect(err).NotTo(HaveOccurred())
@@ -723,14 +668,8 @@ var _ = Describe("Postgres", func() {
 				// Create Postgres
 				createAndWaitForRunning()
 
-				By("Check for Postgres client")
-				f.EventuallyPostgresClientReady(postgres.ObjectMeta).Should(BeTrue())
-
-				pgClient, err = f.GetPostgresClient(postgres.ObjectMeta)
-				Expect(err).NotTo(HaveOccurred())
-
 				By("Checking Table")
-				f.EventuallyPostgresTableCount(pgClient).Should(Equal(6))
+				f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(6))
 			})
 		})
 
