@@ -226,7 +226,7 @@ func (c *Controller) matchDormantDatabase(postgres *api.Postgres) error {
 
 	if originalSpec.DatabaseSecret == nil {
 		originalSpec.DatabaseSecret = &core.SecretVolumeSource{
-			SecretName: postgres.Name + "-auth",
+			SecretName: postgres.OffshootName() + "-auth",
 		}
 	}
 

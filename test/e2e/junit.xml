@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-  <testsuite tests="1" failures="0" time="97.261245321">
+  <testsuite tests="1" failures="0" time="1059.85364258">
       <testcase name="Postgres Test General - should run successfully" classname="e2e Suite" time="0">
           <skipped></skipped>
       </testcase>
@@ -36,7 +36,9 @@
       <testcase name="Postgres Test Resume With Init should resume DormantDatabase successfully" classname="e2e Suite" time="0">
           <skipped></skipped>
       </testcase>
-      <testcase name="Postgres Test Resume With original Postgres should resume DormantDatabase successfully" classname="e2e Suite" time="91.324773997"></testcase>
+      <testcase name="Postgres Test Resume With original Postgres should resume DormantDatabase successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
       <testcase name="Postgres Test Resume With original Postgres with init should resume DormantDatabase successfully" classname="e2e Suite" time="0">
           <skipped></skipped>
       </testcase>
@@ -46,7 +48,5 @@
       <testcase name="Postgres Test SnapshotScheduler With Update should run schedular successfully" classname="e2e Suite" time="0">
           <skipped></skipped>
       </testcase>
-      <testcase name="Postgres Test Archive with wal-g should archive successfully" classname="e2e Suite" time="0">
-          <skipped></skipped>
-      </testcase>
+      <testcase name="Postgres Test Archive with wal-g should archive successfully" classname="e2e Suite" time="1058.934037763"></testcase>
   </testsuite>
