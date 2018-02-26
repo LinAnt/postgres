@@ -1,5 +1,5 @@
 hash: 3edc1b5b43b5f3a64c53614f58a1f45aac8e2dd9530bd933222de2369e2e5cd6
-updated: 2018-02-26T16:49:12.926919995+06:00
+updated: 2018-02-26T17:03:20.400399994+06:00
 imports:
 - name: cloud.google.com/go
   version: fe3d41e1ecb2ce36ad3a979037c9b9a2b726226f
@@ -36,7 +36,6 @@ imports:
   subpackages:
   - apiextensions/v1beta1
   - apps/v1
-  - apps/v1beta1
   - core/v1
   - meta
   - rbac/v1beta1
