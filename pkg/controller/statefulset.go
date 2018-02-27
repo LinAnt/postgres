@@ -42,6 +42,11 @@ func (c *Controller) ensureStatefulSet(
 		in = upsertObjectMeta(in, postgres)
 
 		in.Spec.Replicas = types.Int32P(replicas)
+
+		in.Spec.Selector = &metav1.LabelSelector{
+			MatchLabels: in.Labels,
+		}
+
 		in.Spec.ServiceName = c.opt.GoverningService
 		in.Spec.Template.Labels = in.Labels
 
