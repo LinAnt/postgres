@@ -199,7 +199,7 @@ func (c *Controller) ensureCombinedNode(postgres *api.Postgres) (kutil.VerbType,
 func (c *Controller) checkStatefulSet(postgres *api.Postgres) error {
 	name := postgres.OffshootName()
 	// SatatefulSet for Postgres database
-	statefulSet, err := c.Client.AppsV1beta1().StatefulSets(postgres.Namespace).Get(name, metav1.GetOptions{})
+	statefulSet, err := c.Client.AppsV1().StatefulSets(postgres.Namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		if kerr.IsNotFound(err) {
 			return nil
