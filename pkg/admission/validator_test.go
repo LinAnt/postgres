@@ -130,12 +130,22 @@ var cases = []struct {
 		false,
 		false,
 	},
-	{"Edit Postgres Spec.DatabaseSecret",
+	{"Edit Postgres Spec.DatabaseSecret with Existing Secret",
 		requestKind,
 		"foo",
 		"default",
 		admission.Update,
-		editSpecSecret(samplePostgres()),
+		editExistingSecret(samplePostgres()),
+		samplePostgres(),
+		false,
+		true,
+	},
+	{"Edit Postgres Spec.DatabaseSecret with non Existing Secret",
+		requestKind,
+		"foo",
+		"default",
+		admission.Update,
+		editNonExistingSecret(samplePostgres()),
 		samplePostgres(),
 		false,
 		false,
@@ -227,6 +237,7 @@ func samplePostgres() api.Postgres {
 		},
 		Spec: api.PostgresSpec{
 			Version:    "9.6",
+			Replicas: types.Int32P(1),
 			DoNotPause: true,
 			Storage: &core.PersistentVolumeClaimSpec{
 				StorageClassName: types.StringP("standard"),
@@ -256,9 +267,16 @@ func getAwkwardPostgres() api.Postgres {
 	return postgres
 }
 
-func editSpecSecret(old api.Postgres) api.Postgres {
+func editExistingSecret(old api.Postgres) api.Postgres {
 	old.Spec.DatabaseSecret = &core.SecretVolumeSource{
 		SecretName: "foo-auth",
+	}
+	return old
+}
+
+func editNonExistingSecret(old api.Postgres) api.Postgres {
+	old.Spec.DatabaseSecret = &core.SecretVolumeSource{
+		SecretName: "foo-auth-fused",
 	}
 	return old
 }
