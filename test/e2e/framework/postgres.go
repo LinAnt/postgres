@@ -1,12 +1,12 @@
 package framework
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/appscode/go/crypto/rand"
 	jtypes "github.com/appscode/go/encoding/json/types"
 	"github.com/appscode/go/types"
-	core_util "github.com/appscode/kutil/core/v1"
 	api "github.com/kubedb/apimachinery/apis/kubedb/v1alpha1"
 	kutildb "github.com/kubedb/apimachinery/client/clientset/versioned/typed/kubedb/v1alpha1/util"
 	. "github.com/onsi/gomega"
@@ -17,7 +17,7 @@ import (
 func (i *Invocation) Postgres() *api.Postgres {
 	return &api.Postgres{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rand.WithUniqSuffix(api.ResourceNamePostgres),
+			Name:      rand.WithUniqSuffix(api.ResourceSingularPostgres),
 			Namespace: i.namespace,
 			Labels: map[string]string{
 				"app": i.app,
@@ -59,9 +59,8 @@ func (f *Framework) EventuallyPostgres(meta metav1.ObjectMeta) GomegaAsyncAssert
 			if err != nil {
 				if kerr.IsNotFound(err) {
 					return false
-				} else {
-					Expect(err).NotTo(HaveOccurred())
 				}
+				Expect(err).NotTo(HaveOccurred())
 			}
 			return true
 		},
@@ -106,9 +105,14 @@ func (f *Framework) CleanPostgres() {
 		return
 	}
 	for _, e := range postgresList.Items {
-		kutildb.PatchPostgres(f.extClient, &e, func(in *api.Postgres) *api.Postgres {
-			in.ObjectMeta = core_util.RemoveFinalizer(in.ObjectMeta, api.GenericKey)
+		if _, _, err := kutildb.PatchPostgres(f.extClient, &e, func(in *api.Postgres) *api.Postgres {
+			in.ObjectMeta.Finalizers = nil
 			return in
-		})
+		}); err != nil {
+			fmt.Printf("error Patching Postgres. error: %v", err)
+		}
+	}
+	if err := f.extClient.Postgreses(f.namespace).DeleteCollection(deleteInBackground(), metav1.ListOptions{}); err != nil {
+		fmt.Printf("error in deletion of Postgres. Error: %v", err)
 	}
 }

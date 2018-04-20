@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/appscode/go/crypto/rand"
-	core_util "github.com/appscode/kutil/core/v1"
 	"github.com/graymeta/stow"
 	api "github.com/kubedb/apimachinery/apis/kubedb/v1alpha1"
 	kutildb "github.com/kubedb/apimachinery/client/clientset/versioned/typed/kubedb/v1alpha1/util"
@@ -18,7 +17,7 @@ import (
 func (i *Invocation) Snapshot() *api.Snapshot {
 	return &api.Snapshot{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rand.WithUniqSuffix(api.ResourceNameSnapshot),
+			Name:      rand.WithUniqSuffix(api.ResourceSingularSnapshot),
 			Namespace: i.namespace,
 			Labels: map[string]string{
 				"app": i.app,
@@ -134,9 +133,14 @@ func (f *Framework) CleanSnapshot() {
 		return
 	}
 	for _, s := range snapshotList.Items {
-		kutildb.PatchSnapshot(f.extClient, &s, func(in *api.Snapshot) *api.Snapshot {
-			in.ObjectMeta = core_util.RemoveFinalizer(in.ObjectMeta, api.GenericKey)
+		if _, _, err := kutildb.PatchSnapshot(f.extClient, &s, func(in *api.Snapshot) *api.Snapshot {
+			in.ObjectMeta.Finalizers = nil
 			return in
-		})
+		}); err != nil {
+			fmt.Printf("error Patching Snapshot. error: %v", err)
+		}
+	}
+	if err := f.extClient.Snapshots(f.namespace).DeleteCollection(deleteInBackground(), metav1.ListOptions{}); err != nil {
+		fmt.Printf("error in deletion of Snapshot. Error: %v", err)
 	}
 }

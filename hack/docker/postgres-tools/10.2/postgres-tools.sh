@@ -17,7 +17,7 @@ show_help() {
     echo "    --bucket=BUCKET                name of bucket"
     echo "    --folder=FOLDER                name of folder in bucket"
     echo "    --snapshot=SNAPSHOT            name of snapshot"
-    echo "    --analytics=ENABLE_ANALYTICS   send analytical events to Google Analytics (default true)"
+    echo "    --enable-analytics=ENABLE_ANALYTICS   send analytical events to Google Analytics (default true)"
 }
 
 RETVAL=0
@@ -63,7 +63,7 @@ while test $# -gt 0; do
             export DB_SNAPSHOT=`echo $1 | sed -e 's/^[^=]*=//g'`
             shift
             ;;
-        --analytics*)
+        --analytics* | --enable-analytics)
             export ENABLE_ANALYTICS=`echo $1 | sed -e 's/^[^=]*=//g'`
             shift
             ;;

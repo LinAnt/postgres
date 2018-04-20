@@ -63,18 +63,19 @@ var _ = Describe("Postgres", func() {
 		By("Wait for postgres to be paused")
 		f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
 
-		By("WipeOut postgres: " + postgres.Name)
+		By("Set DormantDatabase Spec.WipeOut to true")
 		_, err := f.PatchDormantDatabase(postgres.ObjectMeta, func(in *api.DormantDatabase) *api.DormantDatabase {
 			in.Spec.WipeOut = true
 			return in
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		By("Wait for postgres to be wipedOut")
-		f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HaveWipedOut())
-
+		By("Delete Dormant Database")
 		err = f.DeleteDormantDatabase(postgres.ObjectMeta)
 		Expect(err).NotTo(HaveOccurred())
+
+		By("Wait for postgres resources to be wipedOut")
+		f.EventuallyWipedOut(postgres.ObjectMeta).Should(Succeed())
 	}
 
 	AfterEach(func() {
@@ -151,10 +152,9 @@ var _ = Describe("Postgres", func() {
 					By("Wait for postgres to be paused")
 					f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
 
-					_, err = f.PatchDormantDatabase(postgres.ObjectMeta, func(in *api.DormantDatabase) *api.DormantDatabase {
-						in.Spec.Resume = true
-						return in
-					})
+					// Create Postgres object again to resume it
+					By("Create Postgres: " + postgres.Name)
+					err = f.CreatePostgres(postgres)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("Wait for DormantDatabase to be deleted")
@@ -169,7 +169,7 @@ var _ = Describe("Postgres", func() {
 			})
 		})
 
-		XContext("DoNotPause", func() {
+		Context("DoNotPause", func() {
 			BeforeEach(func() {
 				postgres.Spec.DoNotPause = true
 			})
@@ -180,7 +180,7 @@ var _ = Describe("Postgres", func() {
 
 				By("Delete postgres")
 				err = f.DeletePostgres(postgres.ObjectMeta)
-				Expect(err).NotTo(HaveOccurred())
+				Expect(err).Should(HaveOccurred())
 
 				By("Postgres is not paused. Check for postgres")
 				f.EventuallyPostgres(postgres.ObjectMeta).Should(BeTrue())
@@ -387,10 +387,9 @@ var _ = Describe("Postgres", func() {
 				By("Wait for postgres to be paused")
 				f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
 
-				_, err = f.PatchDormantDatabase(postgres.ObjectMeta, func(in *api.DormantDatabase) *api.DormantDatabase {
-					in.Spec.Resume = true
-					return in
-				})
+				// Create Postgres object again to resume it
+				By("Create Postgres: " + postgres.Name)
+				err = f.CreatePostgres(postgres)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Wait for DormantDatabase to be deleted")
@@ -430,76 +429,47 @@ var _ = Describe("Postgres", func() {
 				It("should resume DormantDatabase successfully", shouldResumeSuccessfully)
 			})
 
-			Context("With original Postgres", func() {
+			Context("Resume Multiple times - with init", func() {
+				BeforeEach(func() {
+					usedInitialized = true
+					postgres.Spec.Init = &api.InitSpec{
+						ScriptSource: &api.ScriptSourceSpec{
+							ScriptPath: "postgres-init-scripts/run.sh",
+							VolumeSource: core.VolumeSource{
+								GitRepo: &core.GitRepoVolumeSource{
+									Repository: "https://github.com/kubedb/postgres-init-scripts.git",
+								},
+							},
+						},
+					}
+				})
+
 				It("should resume DormantDatabase successfully", func() {
 					// Create and wait for running Postgres
 					createAndWaitForRunning()
 
-					By("Delete postgres")
-					f.DeletePostgres(postgres.ObjectMeta)
+					for i := 0; i < 3; i++ {
+						By(fmt.Sprintf("%v-th", i+1) + " time running.")
+						By("Delete postgres")
+						f.DeletePostgres(postgres.ObjectMeta)
 
-					By("Wait for postgres to be paused")
-					f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
+						By("Wait for postgres to be paused")
+						f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
 
-					// Create Postgres object again to resume it
-					By("Create Postgres: " + postgres.Name)
-					err = f.CreatePostgres(postgres)
-					if err != nil {
-						fmt.Println(err)
+						// Create Postgres object again to resume it
+						By("Create Postgres: " + postgres.Name)
+						err = f.CreatePostgres(postgres)
+						Expect(err).NotTo(HaveOccurred())
+
+						By("Wait for DormantDatabase to be deleted")
+						f.EventuallyDormantDatabase(postgres.ObjectMeta).Should(BeFalse())
+
+						By("Wait for Running postgres")
+						f.EventuallyPostgresRunning(postgres.ObjectMeta).Should(BeTrue())
+
+						_, err := f.GetPostgres(postgres.ObjectMeta)
+						Expect(err).NotTo(HaveOccurred())
 					}
-					Expect(err).NotTo(HaveOccurred())
-
-					By("Wait for DormantDatabase to be deleted")
-					f.EventuallyDormantDatabase(postgres.ObjectMeta).Should(BeFalse())
-
-					By("Wait for Running postgres")
-					f.EventuallyPostgresRunning(postgres.ObjectMeta).Should(BeTrue())
-
-					postgres, err = f.GetPostgres(postgres.ObjectMeta)
-					Expect(err).NotTo(HaveOccurred())
-				})
-				Context("with init", func() {
-					BeforeEach(func() {
-						usedInitialized = true
-						postgres.Spec.Init = &api.InitSpec{
-							ScriptSource: &api.ScriptSourceSpec{
-								ScriptPath: "postgres-init-scripts/run.sh",
-								VolumeSource: core.VolumeSource{
-									GitRepo: &core.GitRepoVolumeSource{
-										Repository: "https://github.com/kubedb/postgres-init-scripts.git",
-									},
-								},
-							},
-						}
-					})
-
-					It("should resume DormantDatabase successfully", func() {
-						// Create and wait for running Postgres
-						createAndWaitForRunning()
-
-						for i := 0; i < 3; i++ {
-							By(fmt.Sprintf("%v-th", i+1) + " time running.")
-							By("Delete postgres")
-							f.DeletePostgres(postgres.ObjectMeta)
-
-							By("Wait for postgres to be paused")
-							f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
-
-							// Create Postgres object again to resume it
-							By("Create Postgres: " + postgres.Name)
-							err = f.CreatePostgres(postgres)
-							Expect(err).NotTo(HaveOccurred())
-
-							By("Wait for DormantDatabase to be deleted")
-							f.EventuallyDormantDatabase(postgres.ObjectMeta).Should(BeFalse())
-
-							By("Wait for Running postgres")
-							f.EventuallyPostgresRunning(postgres.ObjectMeta).Should(BeTrue())
-
-							_, err := f.GetPostgres(postgres.ObjectMeta)
-							Expect(err).NotTo(HaveOccurred())
-						}
-					})
 				})
 			})
 		})

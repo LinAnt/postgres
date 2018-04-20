@@ -100,9 +100,8 @@ func (c *Controller) checkService(postgres *api.Postgres, name string) error {
 	if err != nil {
 		if kerr.IsNotFound(err) {
 			return nil
-		} else {
-			return err
 		}
+		return err
 	}
 
 	if service.Spec.Selector[api.LabelDatabaseName] != postgres.OffshootName() {
@@ -118,7 +117,13 @@ func (c *Controller) createService(postgres *api.Postgres) (kutil.VerbType, erro
 		Namespace: postgres.Namespace,
 	}
 
+	ref, rerr := reference.GetReference(clientsetscheme.Scheme, postgres)
+	if rerr != nil {
+		return kutil.VerbUnchanged, rerr
+	}
+
 	_, ok, err := core_util.CreateOrPatchService(c.Client, meta, func(in *core.Service) *core.Service {
+		in.ObjectMeta = core_util.EnsureOwnerReference(in.ObjectMeta, ref)
 		in.Labels = postgres.OffshootLabels()
 		in.Spec.Selector = postgres.OffshootLabels()
 		in.Spec.Ports = upsertServicePort(in, postgres)
@@ -153,28 +158,17 @@ func (c *Controller) createReplicasService(postgres *api.Postgres) (kutil.VerbTy
 		Namespace: postgres.Namespace,
 	}
 
+	ref, rerr := reference.GetReference(clientsetscheme.Scheme, postgres)
+	if rerr != nil {
+		return kutil.VerbUnchanged, rerr
+	}
+
 	_, ok, err := core_util.CreateOrPatchService(c.Client, meta, func(in *core.Service) *core.Service {
+		in.ObjectMeta = core_util.EnsureOwnerReference(in.ObjectMeta, ref)
 		in.Labels = postgres.OffshootLabels()
 		in.Spec.Selector = postgres.OffshootLabels()
 		in.Spec.Ports = upsertServicePort(in, postgres)
 		return in
 	})
 	return ok, err
-}
-
-func (c *Controller) deleteService(name, namespace string) error {
-	service, err := c.Client.CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
-	if err != nil {
-		if kerr.IsNotFound(err) {
-			return nil
-		} else {
-			return err
-		}
-	}
-
-	if service.Spec.Selector[api.LabelDatabaseName] != name {
-		return nil
-	}
-
-	return c.Client.CoreV1().Services(namespace).Delete(name, nil)
 }
