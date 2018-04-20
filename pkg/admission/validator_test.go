@@ -237,7 +237,7 @@ func samplePostgres() api.Postgres {
 		},
 		Spec: api.PostgresSpec{
 			Version:    "9.6",
-			Replicas: types.Int32P(1),
+			Replicas:   types.Int32P(1),
 			DoNotPause: true,
 			Storage: &core.PersistentVolumeClaimSpec{
 				StorageClassName: types.StringP("standard"),
