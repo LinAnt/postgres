@@ -97,6 +97,10 @@ func (a *PostgresMutator) Admit(req *admission.AdmissionRequest) *admission.Admi
 
 // setDefaultValues provides the defaulting that is performed in mutating stage of creating/updating a Postgres database
 func setDefaultValues(client kubernetes.Interface, extClient cs.Interface, postgres *api.Postgres) (runtime.Object, error) {
+	if postgres.Spec.Version == "" {
+		return nil, fmt.Errorf(`object 'Version' is missing in '%v'`, postgres.Spec)
+	}
+
 	if postgres.Spec.Replicas == nil {
 		postgres.Spec.Replicas = types.Int32P(1)
 	}

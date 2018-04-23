@@ -237,7 +237,7 @@ var _ = Describe("Postgres", func() {
 				It("should take Snapshot successfully", shouldTakeSnapshot)
 			})
 
-			XContext("In S3", func() {
+			Context("In S3", func() {
 				BeforeEach(func() {
 					secret = f.SecretForS3Backend()
 					snapshot.Spec.StorageSecretName = secret.Name
@@ -261,7 +261,7 @@ var _ = Describe("Postgres", func() {
 				It("should take Snapshot successfully", shouldTakeSnapshot)
 			})
 
-			XContext("In Azure", func() {
+			Context("In Azure", func() {
 				BeforeEach(func() {
 					secret = f.SecretForAzureBackend()
 					snapshot.Spec.StorageSecretName = secret.Name
@@ -273,7 +273,7 @@ var _ = Describe("Postgres", func() {
 				It("should take Snapshot successfully", shouldTakeSnapshot)
 			})
 
-			XContext("In Swift", func() {
+			Context("In Swift", func() {
 				BeforeEach(func() {
 					secret = f.SecretForSwiftBackend()
 					snapshot.Spec.StorageSecretName = secret.Name
@@ -542,7 +542,7 @@ var _ = Describe("Postgres", func() {
 			})
 		})
 
-		FContext("Archive with wal-g", func() {
+		Context("Archive with wal-g", func() {
 			BeforeEach(func() {
 				secret = f.SecretForS3Backend()
 				postgres.Spec.Archiver = &api.PostgresArchiverSpec{
