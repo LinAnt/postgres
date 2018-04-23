@@ -237,7 +237,7 @@ var _ = Describe("Postgres", func() {
 				It("should take Snapshot successfully", shouldTakeSnapshot)
 			})
 
-			Context("In S3", func() {
+			XContext("In S3", func() {
 				BeforeEach(func() {
 					secret = f.SecretForS3Backend()
 					snapshot.Spec.StorageSecretName = secret.Name
@@ -261,7 +261,7 @@ var _ = Describe("Postgres", func() {
 				It("should take Snapshot successfully", shouldTakeSnapshot)
 			})
 
-			Context("In Azure", func() {
+			XContext("In Azure", func() {
 				BeforeEach(func() {
 					secret = f.SecretForAzureBackend()
 					snapshot.Spec.StorageSecretName = secret.Name
@@ -273,7 +273,7 @@ var _ = Describe("Postgres", func() {
 				It("should take Snapshot successfully", shouldTakeSnapshot)
 			})
 
-			Context("In Swift", func() {
+			XContext("In Swift", func() {
 				BeforeEach(func() {
 					secret = f.SecretForSwiftBackend()
 					snapshot.Spec.StorageSecretName = secret.Name
@@ -314,10 +314,10 @@ var _ = Describe("Postgres", func() {
 			Context("With Snapshot", func() {
 				BeforeEach(func() {
 					skipSnapshotDataChecking = false
-					secret = f.SecretForS3Backend()
+					secret = f.SecretForGCSBackend()
 					snapshot.Spec.StorageSecretName = secret.Name
-					snapshot.Spec.S3 = &api.S3Spec{
-						Bucket: os.Getenv(S3_BUCKET_NAME),
+					snapshot.Spec.GCS = &api.GCSSpec{
+						Bucket: os.Getenv(GCS_BUCKET_NAME),
 					}
 					snapshot.Spec.DatabaseName = postgres.Name
 				})
@@ -336,10 +336,12 @@ var _ = Describe("Postgres", func() {
 					f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(3))
 
 					By("Create Secret")
-					f.CreateSecret(secret)
+					err = f.CreateSecret(secret)
+					Expect(err).NotTo(HaveOccurred())
 
 					By("Create Snapshot")
-					f.CreateSnapshot(snapshot)
+					err = f.CreateSnapshot(snapshot)
+					Expect(err).NotTo(HaveOccurred())
 
 					By("Check for Succeeded snapshot")
 					f.EventuallySnapshotPhase(snapshot.ObjectMeta).Should(Equal(api.SnapshotPhaseSucceeded))
@@ -540,7 +542,7 @@ var _ = Describe("Postgres", func() {
 			})
 		})
 
-		Context("Archive with wal-g", func() {
+		FContext("Archive with wal-g", func() {
 			BeforeEach(func() {
 				secret = f.SecretForS3Backend()
 				postgres.Spec.Archiver = &api.PostgresArchiverSpec{

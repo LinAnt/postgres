@@ -63,7 +63,7 @@ while test $# -gt 0; do
             export DB_SNAPSHOT=`echo $1 | sed -e 's/^[^=]*=//g'`
             shift
             ;;
-        --analytics* | --enable-analytics)
+        --analytics* | --enable-analytics*)
             export ENABLE_ANALYTICS=`echo $1 | sed -e 's/^[^=]*=//g'`
             shift
             ;;
