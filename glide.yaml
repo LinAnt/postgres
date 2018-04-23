@@ -25,7 +25,7 @@ import:
   version: master
 - package: github.com/jpillora/go-ogle-analytics
 - package: github.com/kubedb/apimachinery
-  version: addRabc
+  version: master
 - package: github.com/spf13/cobra
   version: master
 - package: github.com/spf13/pflag
@@ -47,7 +47,7 @@ import:
 - package: k8s.io/kubernetes
   version: v1.9.0
 - package: github.com/appscode/kutil
-  version: addRabc
+  version: master
 - package: github.com/appscode/kubernetes-webhook-util
   version: release-6.0
 - package: github.com/appscode/kubernetes-webhook-util
