@@ -142,7 +142,7 @@ func (c *Controller) createRestoreJob(postgres *api.Postgres, snapshot *api.Snap
 }
 
 func (c *Controller) GetSnapshotter(snapshot *api.Snapshot) (*batch.Job, error) {
-	postgres, err := c.mgLister.Postgreses(snapshot.Namespace).Get(snapshot.Spec.DatabaseName)
+	postgres, err := c.pgLister.Postgreses(snapshot.Namespace).Get(snapshot.Spec.DatabaseName)
 	if err != nil {
 		return nil, err
 	}

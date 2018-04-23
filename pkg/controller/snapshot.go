@@ -14,7 +14,7 @@ func (c *Controller) ValidateSnapshot(snapshot *api.Snapshot) error {
 		return fmt.Errorf(`object 'DatabaseName' is missing in '%v'`, snapshot.Spec)
 	}
 
-	if _, err := c.mgLister.Postgreses(snapshot.Namespace).Get(databaseName); err != nil {
+	if _, err := c.pgLister.Postgreses(snapshot.Namespace).Get(databaseName); err != nil {
 		return err
 	}
 

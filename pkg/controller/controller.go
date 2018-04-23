@@ -41,9 +41,9 @@ type Controller struct {
 	selector labels.Selector
 
 	// Postgres
-	mgQueue    *queue.Worker
-	mgInformer cache.SharedIndexInformer
-	mgLister   api_listers.PostgresLister
+	pgQueue    *queue.Worker
+	pgInformer cache.SharedIndexInformer
+	pgLister   api_listers.PostgresLister
 }
 
 var _ amc.Snapshotter = &Controller{}
@@ -104,7 +104,7 @@ func (c *Controller) RunControllers(stopCh <-chan struct{}) {
 	c.cronController.StartCron()
 
 	// Watch x  TPR objects
-	c.mgQueue.Run(stopCh)
+	c.pgQueue.Run(stopCh)
 	c.DrmnQueue.Run(stopCh)
 	c.SnapQueue.Run(stopCh)
 	c.JobQueue.Run(stopCh)

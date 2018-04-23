@@ -1,2 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-  <testsuite tests="1" failures="0" time="491.796359425"></testsuite>
+  <testsuite tests="4" failures="0" time="729.955415656">
+      <testcase name="Postgres Test General - should run successfully" classname="e2e Suite" time="56.464350939"></testcase>
+      <testcase name="Postgres Test General With PVC should run successfully" classname="e2e Suite" time="474.886170701"></testcase>
+      <testcase name="Postgres Test DoNotPause should work successfully" classname="e2e Suite" time="63.26180021"></testcase>
+  </testsuite>

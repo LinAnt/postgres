@@ -10,10 +10,10 @@ import (
 )
 
 func (c *Controller) initWatcher() {
-	c.mgInformer = c.KubedbInformerFactory.Kubedb().V1alpha1().Postgreses().Informer()
-	c.mgQueue = queue.New("Postgres", c.MaxNumRequeues, c.NumThreads, c.runPostgres)
-	c.mgLister = c.KubedbInformerFactory.Kubedb().V1alpha1().Postgreses().Lister()
-	c.mgInformer.AddEventHandler(queue.NewEventHandler(c.mgQueue.GetQueue(), func(old interface{}, new interface{}) bool {
+	c.pgInformer = c.KubedbInformerFactory.Kubedb().V1alpha1().Postgreses().Informer()
+	c.pgQueue = queue.New("Postgres", c.MaxNumRequeues, c.NumThreads, c.runPostgres)
+	c.pgLister = c.KubedbInformerFactory.Kubedb().V1alpha1().Postgreses().Lister()
+	c.pgInformer.AddEventHandler(queue.NewEventHandler(c.pgQueue.GetQueue(), func(old interface{}, new interface{}) bool {
 		oldObj := old.(*api.Postgres)
 		newObj := new.(*api.Postgres)
 		return newObj.DeletionTimestamp != nil || !postgresEqual(oldObj, newObj)
@@ -36,7 +36,7 @@ func postgresEqual(old, new *api.Postgres) bool {
 
 func (c *Controller) runPostgres(key string) error {
 	log.Debugln("started processing, key:", key)
-	obj, exists, err := c.mgInformer.GetIndexer().GetByKey(key)
+	obj, exists, err := c.pgInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		log.Errorf("Fetching object with key %s from store failed with %v\n", key, err)
 		return err
