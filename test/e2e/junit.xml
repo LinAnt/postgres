@@ -1,26 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
-  <testsuite tests="14" failures="0" time="2010.735673217">
-      <testcase name="Postgres Test General - should run successfully" classname="e2e Suite" time="106.062493379"></testcase>
-      <testcase name="Postgres Test General With PVC should run successfully" classname="e2e Suite" time="129.751244674"></testcase>
+  <testsuite tests="1" failures="0" time="571.222829795">
+      <testcase name="Postgres Test General - should run successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="Postgres Test General With PVC should run successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
       <testcase name="Postgres Test DoNotPause should work successfully" classname="e2e Suite" time="0">
           <skipped></skipped>
       </testcase>
-      <testcase name="Postgres Test Snapshot In Local should take Snapshot successfully" classname="e2e Suite" time="81.554160369"></testcase>
-      <testcase name="Postgres Test Snapshot In S3 should take Snapshot successfully" classname="e2e Suite" time="90.230173579"></testcase>
-      <testcase name="Postgres Test Snapshot In GCS should take Snapshot successfully" classname="e2e Suite" time="78.694600136"></testcase>
+      <testcase name="Postgres Test Snapshot In Local should take Snapshot successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="Postgres Test Snapshot In S3 should take Snapshot successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="Postgres Test Snapshot In GCS should take Snapshot successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
       <testcase name="Postgres Test Snapshot In Azure should take Snapshot successfully" classname="e2e Suite" time="0">
           <skipped></skipped>
       </testcase>
       <testcase name="Postgres Test Snapshot In Swift should take Snapshot successfully" classname="e2e Suite" time="0">
           <skipped></skipped>
       </testcase>
-      <testcase name="Postgres Test Initialize With Script should run successfully" classname="e2e Suite" time="77.932548929"></testcase>
-      <testcase name="Postgres Test Initialize With Snapshot should run successfully" classname="e2e Suite" time="212.535872715"></testcase>
-      <testcase name="Postgres Test Resume - should resume DormantDatabase successfully" classname="e2e Suite" time="57.950802364"></testcase>
-      <testcase name="Postgres Test Resume With Init should resume DormantDatabase successfully" classname="e2e Suite" time="62.410089603"></testcase>
-      <testcase name="Postgres Test Resume With original Postgres should resume DormantDatabase successfully" classname="e2e Suite" time="41.770328339"></testcase>
-      <testcase name="Postgres Test Resume With original Postgres with init should resume DormantDatabase successfully" classname="e2e Suite" time="102.89749754"></testcase>
-      <testcase name="Postgres Test SnapshotScheduler With Startup should run schedular successfully" classname="e2e Suite" time="148.963507641"></testcase>
-      <testcase name="Postgres Test SnapshotScheduler With Update should run schedular successfully" classname="e2e Suite" time="153.586345483"></testcase>
-      <testcase name="Postgres Test Archive with wal-g should archive successfully" classname="e2e Suite" time="662.937102576"></testcase>
+      <testcase name="Postgres Test Initialize With Script should run successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="Postgres Test Initialize With Snapshot should run successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="Postgres Test Resume - should resume DormantDatabase successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="Postgres Test Resume With Init should resume DormantDatabase successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="Postgres Test Resume With Snapshot Init should resume successfully" classname="e2e Suite" time="559.034497283"></testcase>
+      <testcase name="Postgres Test Resume Resume Multiple times - with init should resume DormantDatabase successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="Postgres Test SnapshotScheduler With Startup should run schedular successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="Postgres Test SnapshotScheduler With Update should run schedular successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="Postgres Test Archive with wal-g should archive successfully" classname="e2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
   </testsuite>

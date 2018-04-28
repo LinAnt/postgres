@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/appscode/go/types"
+	meta_util "github.com/appscode/kutil/meta"
 	api "github.com/kubedb/apimachinery/apis/kubedb/v1alpha1"
 	"github.com/kubedb/postgres/test/e2e/framework"
 	"github.com/kubedb/postgres/test/e2e/matcher"
@@ -63,18 +64,19 @@ var _ = Describe("Postgres", func() {
 		By("Wait for postgres to be paused")
 		f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
 
-		By("WipeOut postgres: " + postgres.Name)
+		By("Set DormantDatabase Spec.WipeOut to true")
 		_, err := f.PatchDormantDatabase(postgres.ObjectMeta, func(in *api.DormantDatabase) *api.DormantDatabase {
 			in.Spec.WipeOut = true
 			return in
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		By("Wait for postgres to be wipedOut")
-		f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HaveWipedOut())
-
+		By("Delete Dormant Database")
 		err = f.DeleteDormantDatabase(postgres.ObjectMeta)
 		Expect(err).NotTo(HaveOccurred())
+
+		By("Wait for postgres resources to be wipedOut")
+		f.EventuallyWipedOut(postgres.ObjectMeta).Should(Succeed())
 	}
 
 	AfterEach(func() {
@@ -151,10 +153,9 @@ var _ = Describe("Postgres", func() {
 					By("Wait for postgres to be paused")
 					f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
 
-					_, err = f.PatchDormantDatabase(postgres.ObjectMeta, func(in *api.DormantDatabase) *api.DormantDatabase {
-						in.Spec.Resume = true
-						return in
-					})
+					// Create Postgres object again to resume it
+					By("Create Postgres: " + postgres.Name)
+					err = f.CreatePostgres(postgres)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("Wait for DormantDatabase to be deleted")
@@ -169,7 +170,7 @@ var _ = Describe("Postgres", func() {
 			})
 		})
 
-		XContext("DoNotPause", func() {
+		Context("DoNotPause", func() {
 			BeforeEach(func() {
 				postgres.Spec.DoNotPause = true
 			})
@@ -180,7 +181,7 @@ var _ = Describe("Postgres", func() {
 
 				By("Delete postgres")
 				err = f.DeletePostgres(postgres.ObjectMeta)
-				Expect(err).NotTo(HaveOccurred())
+				Expect(err).Should(HaveOccurred())
 
 				By("Postgres is not paused. Check for postgres")
 				f.EventuallyPostgres(postgres.ObjectMeta).Should(BeTrue())
@@ -314,10 +315,10 @@ var _ = Describe("Postgres", func() {
 			Context("With Snapshot", func() {
 				BeforeEach(func() {
 					skipSnapshotDataChecking = false
-					secret = f.SecretForS3Backend()
+					secret = f.SecretForGCSBackend()
 					snapshot.Spec.StorageSecretName = secret.Name
-					snapshot.Spec.S3 = &api.S3Spec{
-						Bucket: os.Getenv(S3_BUCKET_NAME),
+					snapshot.Spec.GCS = &api.GCSSpec{
+						Bucket: os.Getenv(GCS_BUCKET_NAME),
 					}
 					snapshot.Spec.DatabaseName = postgres.Name
 				})
@@ -336,10 +337,12 @@ var _ = Describe("Postgres", func() {
 					f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(3))
 
 					By("Create Secret")
-					f.CreateSecret(secret)
+					err = f.CreateSecret(secret)
+					Expect(err).NotTo(HaveOccurred())
 
 					By("Create Snapshot")
-					f.CreateSnapshot(snapshot)
+					err = f.CreateSnapshot(snapshot)
+					Expect(err).NotTo(HaveOccurred())
 
 					By("Check for Succeeded snapshot")
 					f.EventuallySnapshotPhase(snapshot.ObjectMeta).Should(Equal(api.SnapshotPhaseSucceeded))
@@ -387,10 +390,9 @@ var _ = Describe("Postgres", func() {
 				By("Wait for postgres to be paused")
 				f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
 
-				_, err = f.PatchDormantDatabase(postgres.ObjectMeta, func(in *api.DormantDatabase) *api.DormantDatabase {
-					in.Spec.Resume = true
-					return in
-				})
+				// Create Postgres object again to resume it
+				By("Create Postgres: " + postgres.Name)
+				err = f.CreatePostgres(postgres)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Wait for DormantDatabase to be deleted")
@@ -430,13 +432,85 @@ var _ = Describe("Postgres", func() {
 				It("should resume DormantDatabase successfully", shouldResumeSuccessfully)
 			})
 
-			Context("With original Postgres", func() {
-				It("should resume DormantDatabase successfully", func() {
+			Context("With Snapshot Init", func() {
+				BeforeEach(func() {
+					skipSnapshotDataChecking = false
+					secret = f.SecretForGCSBackend()
+					snapshot.Spec.StorageSecretName = secret.Name
+					snapshot.Spec.GCS = &api.GCSSpec{
+						Bucket: os.Getenv(GCS_BUCKET_NAME),
+					}
+					snapshot.Spec.DatabaseName = postgres.Name
+				})
+				It("should resume successfully", func() {
 					// Create and wait for running Postgres
 					createAndWaitForRunning()
 
+					By("Creating Schema")
+					f.EventuallyCreateSchema(postgres.ObjectMeta).Should(BeTrue())
+
+					By("Creating Table")
+					f.EventuallyCreateTable(postgres.ObjectMeta, 3).Should(BeTrue())
+
+					By("Checking Table")
+					f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(3))
+
+					By("Create Secret")
+					f.CreateSecret(secret)
+
+					By("Create Snapshot")
+					f.CreateSnapshot(snapshot)
+
+					By("Check for Succeeded snapshot")
+					f.EventuallySnapshotPhase(snapshot.ObjectMeta).Should(Equal(api.SnapshotPhaseSucceeded))
+
+					By("Check for snapshot data")
+					f.EventuallySnapshotDataFound(snapshot).Should(BeTrue())
+
+					oldPostgres, err := f.GetPostgres(postgres.ObjectMeta)
+					Expect(err).NotTo(HaveOccurred())
+
+					garbagePostgres.Items = append(garbagePostgres.Items, *oldPostgres)
+
+					By("Create postgres from snapshot")
+					*postgres = *f.Postgres()
+					if f.StorageClass != "" {
+						postgres.Spec.Storage = &core.PersistentVolumeClaimSpec{
+							Resources: core.ResourceRequirements{
+								Requests: core.ResourceList{
+									core.ResourceStorage: resource.MustParse("50Mi"),
+								},
+							},
+							StorageClassName: types.StringP(f.StorageClass),
+						}
+					}
+					postgres.Spec.Init = &api.InitSpec{
+						SnapshotSource: &api.SnapshotSourceSpec{
+							Namespace: snapshot.Namespace,
+							Name:      snapshot.Name,
+						},
+					}
+
+					By("Creating init Snapshot Postgres without secret name" + postgres.Name)
+					err = f.CreatePostgres(postgres)
+					Expect(err).Should(HaveOccurred())
+
+					// for snapshot init, user have to use older secret,
+					postgres.Spec.DatabaseSecret = oldPostgres.Spec.DatabaseSecret
+					// Create and wait for running Postgres
+					createAndWaitForRunning()
+
+					By("Ping Database")
+					f.EventuallyPingDatabase(postgres.ObjectMeta).Should(BeTrue())
+
+					By("Checking Table")
+					f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(3))
+
+					By("Again delete and resume  " + postgres.Name)
+
 					By("Delete postgres")
-					f.DeletePostgres(postgres.ObjectMeta)
+					err = f.DeletePostgres(postgres.ObjectMeta)
+					Expect(err).NotTo(HaveOccurred())
 
 					By("Wait for postgres to be paused")
 					f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
@@ -444,9 +518,6 @@ var _ = Describe("Postgres", func() {
 					// Create Postgres object again to resume it
 					By("Create Postgres: " + postgres.Name)
 					err = f.CreatePostgres(postgres)
-					if err != nil {
-						fmt.Println(err)
-					}
 					Expect(err).NotTo(HaveOccurred())
 
 					By("Wait for DormantDatabase to be deleted")
@@ -457,49 +528,61 @@ var _ = Describe("Postgres", func() {
 
 					postgres, err = f.GetPostgres(postgres.ObjectMeta)
 					Expect(err).NotTo(HaveOccurred())
+
+					By("Ping Database")
+					f.EventuallyPingDatabase(postgres.ObjectMeta).Should(BeTrue())
+
+					By("Checking Table")
+					f.EventuallyCountTable(postgres.ObjectMeta).Should(Equal(3))
+
+					Expect(postgres.Spec.Init).ShouldNot(BeNil())
+					_, err = meta_util.GetString(postgres.Annotations, api.AnnotationInitialized)
+					Expect(err).NotTo(HaveOccurred())
+
 				})
-				Context("with init", func() {
-					BeforeEach(func() {
-						usedInitialized = true
-						postgres.Spec.Init = &api.InitSpec{
-							ScriptSource: &api.ScriptSourceSpec{
-								ScriptPath: "postgres-init-scripts/run.sh",
-								VolumeSource: core.VolumeSource{
-									GitRepo: &core.GitRepoVolumeSource{
-										Repository: "https://github.com/kubedb/postgres-init-scripts.git",
-									},
+			})
+
+			Context("Resume Multiple times - with init", func() {
+				BeforeEach(func() {
+					usedInitialized = true
+					postgres.Spec.Init = &api.InitSpec{
+						ScriptSource: &api.ScriptSourceSpec{
+							ScriptPath: "postgres-init-scripts/run.sh",
+							VolumeSource: core.VolumeSource{
+								GitRepo: &core.GitRepoVolumeSource{
+									Repository: "https://github.com/kubedb/postgres-init-scripts.git",
 								},
 							},
-						}
-					})
+						},
+					}
+				})
 
-					It("should resume DormantDatabase successfully", func() {
-						// Create and wait for running Postgres
-						createAndWaitForRunning()
+				It("should resume DormantDatabase successfully", func() {
+					// Create and wait for running Postgres
+					createAndWaitForRunning()
 
-						for i := 0; i < 3; i++ {
-							By(fmt.Sprintf("%v-th", i+1) + " time running.")
-							By("Delete postgres")
-							f.DeletePostgres(postgres.ObjectMeta)
+					for i := 0; i < 3; i++ {
+						By(fmt.Sprintf("%v-th", i+1) + " time running.")
+						By("Delete postgres")
+						f.DeletePostgres(postgres.ObjectMeta)
 
-							By("Wait for postgres to be paused")
-							f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
+						By("Wait for postgres to be paused")
+						f.EventuallyDormantDatabaseStatus(postgres.ObjectMeta).Should(matcher.HavePaused())
 
-							// Create Postgres object again to resume it
-							By("Create Postgres: " + postgres.Name)
-							err = f.CreatePostgres(postgres)
-							Expect(err).NotTo(HaveOccurred())
+						// Create Postgres object again to resume it
+						By("Create Postgres: " + postgres.Name)
+						err = f.CreatePostgres(postgres)
+						Expect(err).NotTo(HaveOccurred())
 
-							By("Wait for DormantDatabase to be deleted")
-							f.EventuallyDormantDatabase(postgres.ObjectMeta).Should(BeFalse())
+						By("Wait for DormantDatabase to be deleted")
+						f.EventuallyDormantDatabase(postgres.ObjectMeta).Should(BeFalse())
 
-							By("Wait for Running postgres")
-							f.EventuallyPostgresRunning(postgres.ObjectMeta).Should(BeTrue())
+						By("Wait for Running postgres")
+						f.EventuallyPostgresRunning(postgres.ObjectMeta).Should(BeTrue())
 
-							_, err := f.GetPostgres(postgres.ObjectMeta)
-							Expect(err).NotTo(HaveOccurred())
-						}
-					})
+						_, err := f.GetPostgres(postgres.ObjectMeta)
+						Expect(err).NotTo(HaveOccurred())
+					}
 				})
 			})
 		})

@@ -55,9 +55,8 @@ func (c *Controller) findDatabaseSecret(postgres *api.Postgres) (*core.Secret, e
 	if err != nil {
 		if kerr.IsNotFound(err) {
 			return nil, nil
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
 
 	if secret.Labels[api.LabelDatabaseKind] != api.ResourceKindPostgres ||

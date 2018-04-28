@@ -8,33 +8,33 @@ import (
 
 	"github.com/appscode/go/log"
 	logs "github.com/appscode/go/log/golog"
-	api "github.com/kubedb/apimachinery/apis/kubedb/v1alpha1"
+	"github.com/kubedb/apimachinery/client/clientset/versioned/scheme"
 	cs "github.com/kubedb/apimachinery/client/clientset/versioned/typed/kubedb/v1alpha1"
-	snapc "github.com/kubedb/apimachinery/pkg/controller/snapshot"
 	"github.com/kubedb/postgres/pkg/controller"
-	"github.com/kubedb/postgres/pkg/docker"
 	"github.com/kubedb/postgres/test/e2e/framework"
 	"github.com/mitchellh/go-homedir"
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/reporters"
 	. "github.com/onsi/gomega"
-	crd_cs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	genericapiserver "k8s.io/apiserver/pkg/server"
 	"k8s.io/client-go/kubernetes"
+	clientSetScheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/clientcmd"
+	ka "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 )
 
 var (
-	storageClass       string
-	registry           string
-	enableRbac         bool
-	providedController bool
+	storageClass string
 )
 
 func init() {
+	scheme.AddToScheme(clientSetScheme.Scheme)
+
 	flag.StringVar(&storageClass, "storageclass", "", "Kubernetes StorageClass name")
-	flag.StringVar(&registry, "docker-registry", "kubedb", "User provided docker repository")
-	flag.BoolVar(&enableRbac, "rbac", false, "Enable RBAC for database workloads")
-	flag.BoolVar(&providedController, "provided-controller", false, "Enable this for provided controller")
+	flag.StringVar(&framework.DockerRegistry, "docker-registry", "kubedb", "User provided docker repository")
+	flag.StringVar(&framework.ExporterTag, "exporter-tag", "canary", "Tag of kubedb/operator used as exporter")
+	flag.BoolVar(&framework.EnableRbac, "rbac", true, "Enable RBAC for database workloads")
+	flag.BoolVar(&framework.ProvidedController, "provided-controller", false, "Enable this for provided controller")
 }
 
 const (
@@ -71,10 +71,13 @@ var _ = BeforeSuite(func() {
 
 	// Clients
 	kubeClient := kubernetes.NewForConfigOrDie(config)
-	apiExtKubeClient := crd_cs.NewForConfigOrDie(config)
 	extClient := cs.NewForConfigOrDie(config)
+	kaClient := ka.NewForConfigOrDie(config)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	// Framework
-	root = framework.New(config, kubeClient, extClient, storageClass)
+	root = framework.New(config, kubeClient, extClient, kaClient, storageClass)
 
 	By("Using namespace " + root.Namespace())
 
@@ -82,38 +85,25 @@ var _ = BeforeSuite(func() {
 	err = root.CreateNamespace()
 	Expect(err).NotTo(HaveOccurred())
 
-	if !providedController {
-		cronController := snapc.NewCronController(kubeClient, extClient)
-		// Start Cron
-		cronController.StartCron()
-
-		opt := controller.Options{
-			Docker: docker.Docker{
-				Registry: registry,
-			},
-			OperatorNamespace: root.Namespace(),
-			GoverningService:  api.DatabaseNamePrefix,
-			MaxNumRequeues:    5,
-			EnableRbac:        enableRbac,
-			AnalyticsClientID: "$kubedb$postgres$e2e",
-		}
-
-		// Controller
-		ctrl = controller.New(kubeClient, apiExtKubeClient, extClient, nil, cronController, opt)
-		err = ctrl.Setup()
-		if err != nil {
-			log.Fatalln(err)
-		}
-		ctrl.Run()
+	if !framework.ProvidedController {
+		stopCh := genericapiserver.SetupSignalHandler()
+		go root.RunOperatorAndServer(kubeconfigPath, stopCh)
 	}
 
+	root.EventuallyCRD().Should(Succeed())
+	root.EventuallyAPIServiceReady().Should(Succeed())
 })
 
 var _ = AfterSuite(func() {
+	By("Delete Admission Controller Configs")
+	root.CleanAdmissionConfigs()
+	By("Delete left over Postgres objects")
 	root.CleanPostgres()
+	By("Delete left over Dormant Database objects")
 	root.CleanDormantDatabase()
+	By("Delete left over Snapshot objects")
 	root.CleanSnapshot()
+	By("Delete Namespace")
 	err := root.DeleteNamespace()
 	Expect(err).NotTo(HaveOccurred())
-	By("Deleted namespace")
 })

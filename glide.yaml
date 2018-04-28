@@ -7,6 +7,8 @@ import:
   repo: https://github.com/tamalsaha/prometheus-operator.git
   vcs: git
   version: k-1.9
+- package: github.com/cpuguy83/go-md2man
+  version: v1.0.4
 - package: github.com/ghodss/yaml
   version: v1.0.0
 - package: github.com/go-ini/ini
@@ -21,17 +23,22 @@ import:
   repo: https://github.com/appscode/stow.git
   vcs: git
   version: master
+- package: github.com/jpillora/go-ogle-analytics
 - package: github.com/kubedb/apimachinery
-  version: 0.8.0-beta.2
+  version: master
 - package: github.com/spf13/cobra
   version: master
 - package: github.com/spf13/pflag
   version: master
+- package: github.com/prometheus/client_golang
+  version: v0.8.0
 - package: github.com/prometheus/common
   version: 3233b24a36715a2fe36d162260457857a56d672d
 - package: github.com/sirupsen/logrus
   version: v1.0.3
 - package: k8s.io/api
+  version: kubernetes-1.9.0
+- package: k8s.io/apiserver
   version: kubernetes-1.9.0
 - package: k8s.io/apimachinery
   version: kubernetes-1.9.0
@@ -47,6 +54,10 @@ import:
   version: release-6.0
 - package: github.com/appscode/kube-mon
   version: release-6.0
+- package: github.com/hashicorp/go-version
+  repo: https://github.com/appscode/go-version.git
+  vcs: git
+  version: master
 - package: github.com/onsi/gomega
   version: v1.2.0
 - package: github.com/onsi/ginkgo
