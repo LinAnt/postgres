@@ -24,8 +24,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	clientsetscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/reference"
 	"k8s.io/client-go/util/workqueue"
 )
 
@@ -167,14 +169,16 @@ func (c *Controller) watchDormantDatabase() {
 }
 
 func (c *Controller) pushFailureEvent(postgres *api.Postgres, reason string) {
-	c.recorder.Eventf(
-		postgres.ObjectReference(),
-		core.EventTypeWarning,
-		eventer.EventReasonFailedToStart,
-		`Fail to be ready Postgres: "%v". Reason: %v`,
-		postgres.Name,
-		reason,
-	)
+	if ref, rerr := reference.GetReference(clientsetscheme.Scheme, postgres); rerr == nil {
+		c.recorder.Eventf(
+			ref,
+			core.EventTypeWarning,
+			eventer.EventReasonFailedToStart,
+			`Fail to be ready Postgres: "%v". Reason: %v`,
+			postgres.Name,
+			reason,
+		)
+	}
 
 	pg, _, err := kutildb.PatchPostgres(c.ExtClient, postgres, func(in *api.Postgres) *api.Postgres {
 		in.Status.Phase = api.DatabasePhaseFailed
@@ -182,7 +186,14 @@ func (c *Controller) pushFailureEvent(postgres *api.Postgres, reason string) {
 		return in
 	})
 	if err != nil {
-		c.recorder.Eventf(postgres.ObjectReference(), core.EventTypeWarning, eventer.EventReasonFailedToUpdate, err.Error())
+		if ref, rerr := reference.GetReference(clientsetscheme.Scheme, postgres); rerr == nil {
+			c.recorder.Eventf(
+				ref,
+				core.EventTypeWarning,
+				eventer.EventReasonFailedToUpdate,
+				err.Error(),
+			)
+		}
 	}
 	postgres.Status = pg.Status
 }
