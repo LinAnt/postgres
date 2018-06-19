@@ -2,6 +2,7 @@ package admission
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -120,7 +121,8 @@ func (a *PostgresValidator) Admit(req *admission.AdmissionRequest) *admission.Ad
 }
 
 var (
-	postgresVersions = sets.NewString("9.6", "9.6.7", "10.2")
+	postgresVersions      = sets.NewString("9.6", "9.6.7", "10.2")
+	postgresCustomVersion = `(\d+\.){1,2}\d+-` // Matches x.x.x-<own-version> x.x-<own-version>
 )
 
 // ValidatePostgres checks if the object satisfies all the requirements.
@@ -132,7 +134,13 @@ func ValidatePostgres(client kubernetes.Interface, extClient kubedbv1alpha1.Kube
 
 	// Check Postgres version validation
 	if !postgresVersions.Has(string(postgres.Spec.Version)) {
-		return fmt.Errorf(`KubeDB doesn't support Postgres version: %s`, string(postgres.Spec.Version))
+		ok, err := regexp.MatchString(postgresCustomVersion, string(postgres.Spec.Version))
+		if err != nil {
+			return fmt.Errorf(`KubeDB doesn't support this custom Postgres version: %s, Error: %s`, string(postgres.Spec.Version), err)
+		}
+		if !ok {
+			return fmt.Errorf(`KubeDB doesn't support Postgres version: %s`, string(postgres.Spec.Version))
+		}
 	}
 
 	if postgres.Spec.Replicas == nil || *postgres.Spec.Replicas < 1 {
