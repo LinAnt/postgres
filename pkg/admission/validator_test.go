@@ -138,7 +138,7 @@ var cases = []struct {
 		getCustomPostgres(),
 		api.Postgres{},
 		false,
-		false,
+		true,
 	},
 	{"Create Invalid Postgres",
 		requestKind,

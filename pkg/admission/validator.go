@@ -122,9 +122,10 @@ func (a *PostgresValidator) Admit(req *admission.AdmissionRequest) *admission.Ad
 }
 
 var (
-	postgresVersions      = sets.NewString("9.6", "9.6.7", "10.2")
-	majorConstraints, _   = version.NewConstraint("9, 10")
-	minorConstraints, _   = version.NewConstraint("9.6, 10.2")
+	postgresVersions    = sets.NewString("9.6", "9.6.7", "10.2")
+	majorConstraints, _ = version.NewConstraint(">= 9, < 11")
+	minorConstraints, _ = version.NewConstraint("9.6, 10.2")
+
 	postgresCustomVersion = regexp.MustCompile(`(?P<version>\d+(\.\d+){1,2})-*`) // Matches x.x.x-<own-version> x.x-<own-version>
 )
 
@@ -145,7 +146,14 @@ func ValidatePostgres(client kubernetes.Interface, extClient kubedbv1alpha1.Kube
 		if err != nil || !majorConstraints.Check(customVersion) {
 			return fmt.Errorf(`KubeDB doesn't support Postgres version: %s`, string(postgres.Spec.Version))
 		}
-		if !minorConstraints.Check(customVersion) {
+		var match = false
+		for _, c := range minorConstraints {
+			if c.Check(customVersion) {
+				match = true
+				break
+			}
+		}
+		if !match {
 			fmt.Printf("KubeDB does not officially support version %s of postgres, tread carefully.", customVersion.String())
 		}
 	}
