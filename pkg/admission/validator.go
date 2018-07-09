@@ -124,7 +124,7 @@ func (a *PostgresValidator) Admit(req *admission.AdmissionRequest) *admission.Ad
 var (
 	postgresVersions      = sets.NewString("9.6", "9.6.7", "10.2")
 	majorConstraints, _   = version.NewConstraint("9, 10")
-	minorConstraints, _   = version.NewConstraint("9.6", "10.2")
+	minorConstraints, _   = version.NewConstraint("9.6, 10.2")
 	postgresCustomVersion = regexp.MustCompile(`(?P<version>\d+(\.\d+){1,2})-*`) // Matches x.x.x-<own-version> x.x-<own-version>
 )
 
