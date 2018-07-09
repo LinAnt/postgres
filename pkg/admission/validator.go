@@ -138,6 +138,7 @@ func ValidatePostgres(client kubernetes.Interface, extClient kubedbv1alpha1.Kube
 
 	// Check Postgres version validation
 	if !postgresVersions.Has(string(postgres.Spec.Version)) {
+		// Check if the user is using a valid custom postgres image
 		rawVersion, ok := extractCustomVersion(string(postgres.Spec.Version))
 		if !ok {
 			return fmt.Errorf(`KubeDB doesn't support Postgres version: %s`, string(postgres.Spec.Version))
@@ -146,6 +147,8 @@ func ValidatePostgres(client kubernetes.Interface, extClient kubedbv1alpha1.Kube
 		if err != nil || !majorConstraints.Check(customVersion) {
 			return fmt.Errorf(`KubeDB doesn't support Postgres version: %s`, string(postgres.Spec.Version))
 		}
+
+		// Checks if the custom version matches supported minor versions, if not, print a warning message
 		var match = false
 		for _, c := range minorConstraints {
 			if c.Check(customVersion) {
